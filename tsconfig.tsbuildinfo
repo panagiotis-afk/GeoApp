@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/countrytrail.tsx","./src/components/flagquiz.tsx","./src/components/home.tsx","./src/components/pinthecountry.tsx","./src/data/borders.ts","./src/data/countries.ts","./src/utils/geo.ts"],"errors":true,"version":"5.9.3"}

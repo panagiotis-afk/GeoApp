@@ -1,0 +1,144 @@
+.trail-game {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.trail-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.trail-header .btn-back {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.trail-header .btn-back:hover {
+  background: var(--surface-hover);
+}
+
+.trail-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.trail-instruction {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.trail-instruction strong {
+  color: var(--text);
+}
+
+.trail-chain {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  min-height: 3rem;
+  font-size: 1rem;
+}
+
+.chain-item {
+  color: var(--text);
+}
+
+.chain-arrow {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.chain-target {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.trail-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.trail-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.trail-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.trail-input.input-error {
+  border-color: var(--error);
+}
+
+.trail-form .btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.trail-form .btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.trail-feedback {
+  width: 100%;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.trail-feedback.error {
+  color: var(--error);
+}
+
+.trail-won {
+  text-align: center;
+  padding: 2rem;
+}
+
+.trail-won p {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--success);
+}
+
+.trail-won .btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.trail-won .btn-primary:hover {
+  background: var(--accent-hover);
+}
