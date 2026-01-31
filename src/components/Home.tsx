@@ -7,9 +7,10 @@ type Props = {
   onPlayPin: () => void;
   onPlayTrail: () => void;
   onPlayFlag: () => void;
+  onPlayNative: () => void;
 };
 
-export default function Home({ onPlayPin, onPlayTrail, onPlayFlag }: Props) {
+export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative }: Props) {
   const { continent, setContinent } = useContinentFilter();
 
   return (
@@ -56,6 +57,11 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag }: Props) {
             <span className="mode-icon">🏳️</span>
             <h2>Flag Quiz</h2>
             <p>Guess the country from its flag. Quick and satisfying.</p>
+          </button>
+          <button className="mode-card" onClick={onPlayNative}>
+            <span className="mode-icon">🗣️</span>
+            <h2>Native Name Quiz</h2>
+            <p>We show the country in English; you type its name in the native language.</p>
           </button>
         </div>
       </main>

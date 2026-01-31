@@ -8,9 +8,8 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { useContinentFilter } from "../context/ContinentFilterContext";
-import { getRandomCountries } from "../data/countries";
+import { getCountriesByContinent, getCountryClosestTo, getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
-import { haversineKm, scoreFromDistanceKm } from "../utils/geo";
 import "leaflet/dist/leaflet.css";
 import "./PinTheCountry.css";
 
@@ -118,8 +117,17 @@ function createIcon(color: string) {
   });
 }
 
-const guessIcon = createIcon("var(--accent)");
+const guessCorrectIcon = createIcon("var(--success)");
+const guessWrongIcon = createIcon("var(--error)");
 const targetIcon = createIcon("var(--success)");
+
+/** Goal options for Pin the Country */
+const PIN_GOALS = [
+  { id: "none", label: "No goal" },
+  { id: "5", label: "5 correct", target: 5 },
+  { id: "10", label: "10 correct", target: 10 },
+  { id: "1min", label: "1 minute", targetSeconds: 60 },
+] as const;
 
 type MapClickHandlerProps = {
   onMapClick: (lat: number, lon: number) => void;
@@ -195,31 +203,103 @@ function MapTypeSelector({ value, onChange }: MapTypeSelectorProps) {
 
 type Props = { onBack: () => void };
 
+function formatTime(seconds: number): string {
+  const sec = Math.max(0, Math.floor(seconds));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export default function PinTheCountry({ onBack }: Props) {
   const { continent } = useContinentFilter();
+  const pool = getCountriesByContinent(continent);
+
   const [target, setTarget] = useState<Country | null>(() =>
     getRandomCountries(1, continent)[0] ?? null
   );
-  const [guess, setGuess] = useState<{ lat: number; lon: number } | null>(null);
-  const [totalScore, setTotalScore] = useState(0);
+  const [guess, setGuess] = useState<{ lat: number; lon: number; correct: boolean } | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
   const [round, setRound] = useState(1);
   const [mapType, setMapType] = useState<string>("streets");
+  const [goal, setGoal] = useState<string>("none");
+  const [sessionStart, setSessionStart] = useState(() => Date.now());
+  const [totalPausedMs, setTotalPausedMs] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [gameOver, setGameOver] = useState<"goal" | "time" | null>(null);
+  const [finalElapsed, setFinalElapsed] = useState(0);
+  const pauseStartedAtRef = useRef<number | null>(null);
+
+  const goalConfig = PIN_GOALS.find((g) => g.id === goal);
+  const isTimeGoal = goalConfig && "targetSeconds" in goalConfig;
+
+  // Timer: update every second only when not paused (no guess waiting)
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (pauseStartedAtRef.current === null) {
+        setElapsed(Math.floor((Date.now() - sessionStart - totalPausedMs) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [sessionStart, totalPausedMs]);
+
+  // Check time-based goal when elapsed updates (only while not paused)
+  useEffect(() => {
+    if (gameOver || !isTimeGoal || !goalConfig || !("targetSeconds" in goalConfig)) return;
+    if (pauseStartedAtRef.current !== null) return;
+    if (elapsed >= goalConfig.targetSeconds) {
+      setFinalElapsed(elapsed);
+      setGameOver("time");
+    }
+  }, [elapsed, gameOver, isTimeGoal, goalConfig]);
 
   const handleMapClick = useCallback(
     (lat: number, lon: number) => {
-      if (!target || guess) return;
-      setGuess({ lat, lon });
-      const dist = haversineKm(lat, lon, target.lat, target.lon);
-      setTotalScore((s) => s + scoreFromDistanceKm(dist));
+      if (!target || guess || gameOver) return;
+      const closest = getCountryClosestTo(lat, lon, pool);
+      const correct = closest?.code === target.code;
+      pauseStartedAtRef.current = Date.now();
+      setElapsed(Math.floor((Date.now() - sessionStart - totalPausedMs) / 1000));
+      setGuess({ lat, lon, correct });
+      if (correct) {
+        const nextCount = correctCount + 1;
+        setCorrectCount(nextCount);
+        const targetCorrect = goalConfig && "target" in goalConfig ? goalConfig.target : 0;
+        if (goal !== "none" && targetCorrect > 0 && nextCount >= targetCorrect) {
+          setFinalElapsed(Math.floor((Date.now() - sessionStart - totalPausedMs) / 1000));
+          setGameOver("goal");
+        }
+      }
     },
-    [target, guess]
+    [target, guess, pool, correctCount, goal, goalConfig, gameOver, sessionStart, totalPausedMs]
   );
 
   const handleNext = useCallback(() => {
+    if (gameOver) return;
+    const pausedAt = pauseStartedAtRef.current;
+    const now = Date.now();
+    if (pausedAt !== null) {
+      const addedMs = now - pausedAt;
+      setTotalPausedMs((m) => m + addedMs);
+      pauseStartedAtRef.current = null;
+      // Update elapsed immediately so display is correct (sessionStart is current here)
+      setElapsed((prev) => Math.floor((now - sessionStart - (totalPausedMs + addedMs)) / 1000));
+    }
     const next = getRandomCountries(1, continent)[0];
     setTarget(next ?? null);
     setGuess(null);
     setRound((r) => r + 1);
+  }, [continent, gameOver, sessionStart, totalPausedMs]);
+
+  const handlePlayAgain = useCallback(() => {
+    setGameOver(null);
+    setSessionStart(Date.now());
+    setTotalPausedMs(0);
+    pauseStartedAtRef.current = null;
+    setElapsed(0);
+    setTarget(getRandomCountries(1, continent)[0] ?? null);
+    setGuess(null);
+    setCorrectCount(0);
+    setRound(1);
   }, [continent]);
 
   if (!target) {
@@ -236,16 +316,38 @@ export default function PinTheCountry({ onBack }: Props) {
     );
   }
 
-  const distanceKm =
-    guess !== null
-      ? Math.round(
-          haversineKm(guess.lat, guess.lon, target.lat, target.lon)
-        )
-      : null;
-  const roundScore =
-    guess !== null && distanceKm !== null
-      ? scoreFromDistanceKm(distanceKm)
-      : null;
+  const displayElapsed = Math.max(0, gameOver ? finalElapsed : elapsed);
+
+  // Goal reached or time's up overlay
+  if (gameOver) {
+    const isGoal = gameOver === "goal";
+    return (
+      <div className="pin-game">
+        <header className="pin-header">
+          <button type="button" className="btn-back" onClick={onBack}>
+            ← Back
+          </button>
+          <h1>Pin the Country</h1>
+        </header>
+        <div className="pin-game-over">
+          <p className="pin-game-over-title">
+            {isGoal ? "🎉 Goal reached!" : "⏱️ Time's up!"}
+          </p>
+          <p className="pin-game-over-stats">
+            You got <strong>{correctCount}</strong> correct in <strong>{formatTime(displayElapsed)}</strong>.
+          </p>
+          <div className="pin-game-over-actions">
+            <button type="button" className="btn-primary" onClick={handlePlayAgain}>
+              Play again
+            </button>
+            <button type="button" className="btn-back pin-btn-secondary" onClick={onBack}>
+              Back to menu
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pin-game">
@@ -256,13 +358,30 @@ export default function PinTheCountry({ onBack }: Props) {
         <h1>Pin the Country</h1>
         <div className="pin-stats">
           <span>Round {round}</span>
-          <span>Total: {totalScore} pts</span>
+          <span>Correct: {correctCount}</span>
+          <span>Time: {formatTime(displayElapsed)}</span>
+          <span className="pin-goal-wrap">
+            Goal:{" "}
+            <select
+              className="pin-goal-select"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              aria-label="Goal"
+              disabled={round > 1}
+            >
+              {PIN_GOALS.map((g) => (
+                <option key={g.id} value={g.id}>{g.label}</option>
+              ))}
+            </select>
+          </span>
         </div>
       </header>
-      <p className="pin-prompt">
+      <p className={`pin-prompt ${guess ? (guess.correct ? "pin-prompt-correct" : "pin-prompt-wrong") : ""}`}>
         {guess === null
-          ? `Where is ${target.name}? Click to guess. Change map type (top right). Zoom: scroll or two-finger pinch.`
-          : `You were ${distanceKm} km away. +${roundScore} pts`}
+          ? `Where is ${target.name}? Click the map. Goal: ${PIN_GOALS.find((g) => g.id === goal)?.label ?? "None"}. Time: ${formatTime(displayElapsed)}.`
+          : guess.correct
+            ? "Correct! ✓"
+            : `Wrong. It was ${target.name}.`}
       </p>
       <div className="map-wrapper">
         <div className="map-type-selector-wrap">
@@ -292,7 +411,10 @@ export default function PinTheCountry({ onBack }: Props) {
           />
           {guess && (
             <>
-              <Marker position={[guess.lat, guess.lon]} icon={guessIcon} />
+              <Marker
+                position={[guess.lat, guess.lon]}
+                icon={guess.correct ? guessCorrectIcon : guessWrongIcon}
+              />
               <Marker position={[target.lat, target.lon]} icon={targetIcon} />
             </>
           )}

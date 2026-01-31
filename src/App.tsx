@@ -5,8 +5,9 @@ import Home from "./components/Home";
 import PinTheCountry from "./components/PinTheCountry";
 import CountryTrail from "./components/CountryTrail";
 import FlagQuiz from "./components/FlagQuiz";
+import NativeNameQuiz from "./components/NativeNameQuiz";
 
-export type GameMode = "menu" | "pin" | "trail" | "flag";
+export type GameMode = "menu" | "pin" | "trail" | "flag" | "native";
 
 export default function App() {
   const [mode, setMode] = useState<GameMode>("menu");
@@ -20,6 +21,7 @@ export default function App() {
           onPlayPin={() => setMode("pin")}
           onPlayTrail={() => setMode("trail")}
           onPlayFlag={() => setMode("flag")}
+          onPlayNative={() => setMode("native")}
         />
       )}
       {mode === "pin" && (
@@ -30,6 +32,9 @@ export default function App() {
       )}
       {mode === "flag" && (
         <FlagQuiz onBack={() => setMode("menu")} />
+      )}
+      {mode === "native" && (
+        <NativeNameQuiz onBack={() => setMode("menu")} />
       )}
       </div>
       </ContinentFilterProvider>

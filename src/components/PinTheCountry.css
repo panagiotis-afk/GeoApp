@@ -48,6 +48,71 @@
   color: var(--text-muted);
 }
 
+.pin-prompt-correct {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.pin-prompt-wrong {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.pin-goal-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pin-goal-select {
+  padding: 0.25rem 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.pin-goal-select:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.pin-game-over {
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.pin-game-over-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pin-game-over-stats {
+  margin: 0 0 1.5rem;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
+
+.pin-game-over-stats strong {
+  color: var(--text);
+}
+
+.pin-game-over-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.pin-btn-secondary {
+  background: var(--surface) !important;
+  color: var(--text);
+}
+
 /* Map container: fixed aspect ratio, Leaflet needs explicit height */
 .map-wrapper {
   position: relative;
