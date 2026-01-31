@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ThemeProvider } from "./context/ThemeContext";
+import { ContinentFilterProvider } from "./context/ContinentFilterContext";
 import Home from "./components/Home";
 import PinTheCountry from "./components/PinTheCountry";
 import CountryTrail from "./components/CountryTrail";
@@ -12,6 +13,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
+      <ContinentFilterProvider>
       <div className="app">
         {mode === "menu" && (
         <Home
@@ -30,6 +32,7 @@ export default function App() {
         <FlagQuiz onBack={() => setMode("menu")} />
       )}
       </div>
+      </ContinentFilterProvider>
     </ThemeProvider>
   );
 }

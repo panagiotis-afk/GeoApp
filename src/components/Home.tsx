@@ -1,4 +1,6 @@
 import ThemePicker from "./ThemePicker";
+import { useContinentFilter } from "../context/ContinentFilterContext";
+import { CONTINENTS } from "../data/countries";
 import "./Home.css";
 
 type Props = {
@@ -8,6 +10,8 @@ type Props = {
 };
 
 export default function Home({ onPlayPin, onPlayTrail, onPlayFlag }: Props) {
+  const { continent, setContinent } = useContinentFilter();
+
   return (
     <div className="home">
       <header className="home-header">
@@ -18,6 +22,24 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag }: Props) {
         </div>
         <ThemePicker />
       </header>
+      <div className="home-filters">
+        <label htmlFor="continent-filter" className="home-filter-label">
+          Play in:
+        </label>
+        <select
+          id="continent-filter"
+          className="home-continent-select"
+          value={continent}
+          onChange={(e) => setContinent(e.target.value as typeof continent)}
+          aria-label="Filter by continent"
+        >
+          {CONTINENTS.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
       <main className="home-main">
         <div className="mode-grid">
           <button className="mode-card" onClick={onPlayPin}>

@@ -142,3 +142,18 @@
 .trail-won .btn-primary:hover {
   background: var(--accent-hover);
 }
+
+.trail-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.trail-empty p {
+  margin: 0 0 0.5rem;
+}
+
+.trail-empty strong {
+  color: var(--text);
+}

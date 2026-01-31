@@ -1,28 +1,53 @@
-import { useState, useMemo, useCallback } from "react";
-import { countries, getCountryByCode } from "../data/countries";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { getCountriesByContinent, getCountryByCode } from "../data/countries";
 import { getNeighbours } from "../data/borders";
 import type { Country } from "../data/countries";
+import { useContinentFilter } from "../context/ContinentFilterContext";
 import "./CountryTrail.css";
 
 type Props = { onBack: () => void };
 
-/** Countries that have at least one neighbour in our dataset */
-const trailEligible = countries.filter((c) => {
-  const neighbours = getNeighbours(c.code);
-  return neighbours.some((code) => getCountryByCode(code));
-});
+/** Among filtered countries, those that have at least one neighbour also in the set */
+function getTrailEligible(filtered: Country[]): Country[] {
+  const codes = new Set(filtered.map((c) => c.code));
+  return filtered.filter((c) => {
+    const neighbours = getNeighbours(c.code);
+    return neighbours.some((code) => codes.has(code));
+  });
+}
 
-function pickRandomPair(): [Country, Country] {
+function pickRandomPair(trailEligible: Country[]): [Country, Country] {
+  if (trailEligible.length < 2) return [trailEligible[0], trailEligible[0]];
   const shuffled = [...trailEligible].sort(() => Math.random() - 0.5);
   const start = shuffled[0];
-  const end = shuffled[1] ?? shuffled[0];
-  return start.code === end.code ? pickRandomPair() : [start, end];
+  const end = shuffled[1];
+  return start.code === end.code ? pickRandomPair(shuffled) : [start, end];
 }
 
 export default function CountryTrail({ onBack }: Props) {
-  const [[start, end], setPair] = useState<[Country, Country]>(() =>
-    pickRandomPair()
+  const { continent } = useContinentFilter();
+  const filteredCountries = useMemo(
+    () => getCountriesByContinent(continent),
+    [continent]
   );
+  const trailEligible = useMemo(
+    () => getTrailEligible(filteredCountries),
+    [filteredCountries]
+  );
+
+  const [[start, end], setPair] = useState<[Country, Country]>(() =>
+    trailEligible.length >= 2 ? pickRandomPair(trailEligible) : [filteredCountries[0]!, filteredCountries[1] ?? filteredCountries[0]!]
+  );
+
+  useEffect(() => {
+    if (trailEligible.length >= 2) {
+      setPair(pickRandomPair(trailEligible));
+      setChain([]);
+      setMessage(null);
+      setWon(false);
+    }
+  }, [continent]);
+
   const [chain, setChain] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [message, setMessage] = useState<"ok" | "wrong" | "repeat" | null>(null);
@@ -30,16 +55,19 @@ export default function CountryTrail({ onBack }: Props) {
 
   const currentCode = chain.length === 0 ? start.code : chain[chain.length - 1];
   const currentCountry = getCountryByCode(currentCode)!;
+  const filteredCodes = useMemo(() => new Set(filteredCountries.map((c) => c.code)), [filteredCountries]);
   const validNeighbours = useMemo(
     () =>
-      getNeighbours(currentCode).filter((code) => getCountryByCode(code)),
-    [currentCode]
+      getNeighbours(currentCode).filter(
+        (code) => getCountryByCode(code) && filteredCodes.has(code)
+      ),
+    [currentCode, filteredCodes]
   );
 
   const normalize = (s: string) =>
     s.trim().toLowerCase().replace(/\s+/g, " ");
   const findCountryByName = (name: string): Country | undefined =>
-    countries.find(
+    filteredCountries.find(
       (c) => normalize(c.name) === name || c.name.toLowerCase().startsWith(name)
     );
 
@@ -70,15 +98,34 @@ export default function CountryTrail({ onBack }: Props) {
   );
 
   const handleNewGame = useCallback(() => {
-    setPair(pickRandomPair());
+    if (trailEligible.length > 0) {
+      setPair(pickRandomPair(trailEligible));
+    }
     setChain([]);
     setInput("");
     setMessage(null);
     setWon(false);
-  }, []);
+  }, [trailEligible]);
 
   const chainCountries = [start, ...chain.map((code) => getCountryByCode(code)!)];
   const displayEnd = end;
+
+  if (trailEligible.length < 2) {
+    return (
+      <div className="trail-game">
+        <header className="trail-header">
+          <button type="button" className="btn-back" onClick={onBack}>
+            ← Back
+          </button>
+          <h1>Country Trail</h1>
+        </header>
+        <div className="trail-empty">
+          <p>No country trails for this region (need at least 2 bordering countries in the set).</p>
+          <p>Choose <strong>All</strong> or another continent from the main menu.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="trail-game">

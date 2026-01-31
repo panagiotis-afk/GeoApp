@@ -4,8 +4,10 @@ import {
   TileLayer,
   Marker,
   useMapEvents,
+  useMap,
 } from "react-leaflet";
 import L from "leaflet";
+import { useContinentFilter } from "../context/ContinentFilterContext";
 import { getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
 import { haversineKm, scoreFromDistanceKm } from "../utils/geo";
@@ -39,10 +41,72 @@ const TILE_CONFIG: Record<string, { url: string; attribution: string }> = {
   },
 };
 
-const DEFAULT_CENTER: [number, number] = [20, 0];
-const DEFAULT_ZOOM = 2;
 const MIN_ZOOM = 2;
 const MAX_ZOOM = 18;
+
+/** Map view (center, zoom, optional bounds) per continent. Bounds = [southWest, northEast]. */
+const CONTINENT_MAP_VIEW: Record<
+  string,
+  { center: [number, number]; zoom: number; maxBounds?: [[number, number], [number, number]] }
+> = {
+  All: { center: [20, 0], zoom: 2 },
+  Africa: {
+    center: [0, 20],
+    zoom: 3,
+    maxBounds: [[-36, -19], [38, 52]],
+  },
+  Asia: {
+    center: [25, 90],
+    zoom: 3,
+    maxBounds: [[-11, 25], [56, 145]],
+  },
+  Europe: {
+    center: [54, 15],
+    zoom: 3,
+    maxBounds: [[34, -26], [72, 61]],
+  },
+  "North America": {
+    center: [54, -105],
+    zoom: 3,
+    maxBounds: [[14, -171], [72, -51]],
+  },
+  Oceania: {
+    center: [-22, 135],
+    zoom: 4,
+    maxBounds: [[-51, 110], [0, 180]],
+  },
+  "South America": {
+    center: [-20, -60],
+    zoom: 3,
+    maxBounds: [[-56, -82], [13, -34]],
+  },
+};
+
+function getMapViewConfig(continent: string) {
+  return CONTINENT_MAP_VIEW[continent] ?? CONTINENT_MAP_VIEW.All;
+}
+
+/** Applies continent-based view and bounds when map is ready or continent changes. */
+function MapViewLimiter({ continent }: { continent: string }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const config = getMapViewConfig(continent);
+    map.setView(config.center, config.zoom);
+    if (config.maxBounds) {
+      map.setMaxBounds(L.latLngBounds(
+        L.latLng(config.maxBounds[0][0], config.maxBounds[0][1]),
+        L.latLng(config.maxBounds[1][0], config.maxBounds[1][1])
+      ));
+      map.options.maxBoundsViscosity = 1.0;
+    } else {
+      // No restriction: use full world (Leaflet max lat ~ ±85)
+      map.setMaxBounds(L.latLngBounds(L.latLng(-85, -180), L.latLng(85, 180)));
+    }
+  }, [map, continent]);
+
+  return null;
+}
 
 /** Fix default marker icons in Leaflet with bundlers (e.g. Vite) */
 function createIcon(color: string) {
@@ -132,8 +196,9 @@ function MapTypeSelector({ value, onChange }: MapTypeSelectorProps) {
 type Props = { onBack: () => void };
 
 export default function PinTheCountry({ onBack }: Props) {
+  const { continent } = useContinentFilter();
   const [target, setTarget] = useState<Country | null>(() =>
-    getRandomCountries(1)[0]
+    getRandomCountries(1, continent)[0] ?? null
   );
   const [guess, setGuess] = useState<{ lat: number; lon: number } | null>(null);
   const [totalScore, setTotalScore] = useState(0);
@@ -151,12 +216,25 @@ export default function PinTheCountry({ onBack }: Props) {
   );
 
   const handleNext = useCallback(() => {
-    setTarget(getRandomCountries(1)[0]);
+    const next = getRandomCountries(1, continent)[0];
+    setTarget(next ?? null);
     setGuess(null);
     setRound((r) => r + 1);
-  }, []);
+  }, [continent]);
 
-  if (!target) return null;
+  if (!target) {
+    return (
+      <div className="pin-game">
+        <header className="pin-header">
+          <button type="button" className="btn-back" onClick={onBack}>
+            ← Back
+          </button>
+          <h1>Pin the Country</h1>
+        </header>
+        <p className="pin-prompt">No countries in this region. Choose another continent from the main menu.</p>
+      </div>
+    );
+  }
 
   const distanceKm =
     guess !== null
@@ -191,8 +269,9 @@ export default function PinTheCountry({ onBack }: Props) {
           <MapTypeSelector value={mapType} onChange={setMapType} />
         </div>
         <MapContainer
-          center={DEFAULT_CENTER}
-          zoom={DEFAULT_ZOOM}
+          key={continent}
+          center={getMapViewConfig(continent).center}
+          zoom={getMapViewConfig(continent).zoom}
           minZoom={MIN_ZOOM}
           maxZoom={MAX_ZOOM}
           scrollWheelZoom={true}
@@ -202,6 +281,7 @@ export default function PinTheCountry({ onBack }: Props) {
           className="pin-map"
           style={{ height: "100%", width: "100%" }}
         >
+          <MapViewLimiter continent={continent} />
           <TileLayer
             url={TILE_CONFIG[mapType]?.url ?? TILE_CONFIG.streets.url}
             attribution={TILE_CONFIG[mapType]?.attribution ?? TILE_CONFIG.streets.attribution}

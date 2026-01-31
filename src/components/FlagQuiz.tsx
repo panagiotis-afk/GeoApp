@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { useContinentFilter } from "../context/ContinentFilterContext";
 import { getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
 import "./FlagQuiz.css";
@@ -7,14 +8,15 @@ const FLAG_BASE = "https://flagcdn.com/w320";
 
 type Props = { onBack: () => void };
 
-function initRound(): { options: Country[]; correct: Country } {
-  const options = getRandomCountries(4);
+function initRound(continent: string): { options: Country[]; correct: Country } {
+  const options = getRandomCountries(4, continent);
   const correct = options[Math.floor(Math.random() * options.length)];
   return { options, correct };
 }
 
 export default function FlagQuiz({ onBack }: Props) {
-  const [{ options, correct }, setRoundState] = useState(initRound);
+  const { continent } = useContinentFilter();
+  const [{ options, correct }, setRoundState] = useState(() => initRound(continent));
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -36,11 +38,11 @@ export default function FlagQuiz({ onBack }: Props) {
   );
 
   const handleNext = useCallback(() => {
-    setRoundState(initRound());
+    setRoundState(initRound(continent));
     setPicked(null);
     setRevealed(false);
     setRound((r) => r + 1);
-  }, []);
+  }, [continent]);
 
   return (
     <div className="flag-game">
