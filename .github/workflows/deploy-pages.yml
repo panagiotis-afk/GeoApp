@@ -33,9 +33,13 @@ jobs:
 
       - name: Build
         env:
-          # GitHub Pages serves at https://<user>.github.io/<repo>/
+          # Must match the path: https://<user>.github.io/<repo>/
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
+
+      # GitHub Pages serves 404.html for missing paths (e.g. /GeoApp/foo)
+      - name: Add 404 fallback
+        run: cp dist/index.html dist/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

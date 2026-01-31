@@ -54,6 +54,11 @@ You can host GeoQuest for free so anyone can play it.
 
 The workflow builds the app and deploys the `dist` folder. The first run may need you to approve the **github-pages** environment in **Settings** → **Environments** (one-time).
 
+**Getting 404?** Check:
+1. **Use the full URL** including your repo name: `https://<your-username>.github.io/<repo-name>/` (e.g. `https://panagiotis-afk.github.io/GeoApp/`). The trailing slash matters.
+2. **Pages source** must be **GitHub Actions**, not "Deploy from a branch". In the repo: **Settings** → **Pages** → **Build and deployment** → **Source** → **GitHub Actions**.
+3. In **Actions**, confirm the "Deploy to GitHub Pages" workflow ran and the **deploy** step succeeded. Then open the URL from step 1.
+
 ## Troubleshooting
 
 If you see **"Cannot find module @rollup/rollup-win32-x64-msvc"** or **"not a valid Win32 application"** on Windows, do a clean reinstall:
