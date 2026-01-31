@@ -36,6 +36,24 @@ npm run build
 npm run preview   # serve the built app
 ```
 
+## Host on GitHub Pages
+
+You can host GeoQuest for free so anyone can play it.
+
+1. **Create a GitHub repo** and push this project (e.g. repo name: `GeoQuest` or `geo-quest`).
+
+2. **Turn on GitHub Pages with Actions:**
+   - In the repo: **Settings** → **Pages**
+   - Under **Build and deployment**, set **Source** to **GitHub Actions**.
+
+3. **Deploy:**
+   - Push to the `main` (or `master`) branch, or run the workflow from **Actions** → **Deploy to GitHub Pages** → **Run workflow**.
+   - After it finishes, the site will be at:  
+     **`https://<your-username>.github.io/<repo-name>/`**  
+     (e.g. `https://jane.github.io/GeoQuest/`)
+
+The workflow builds the app and deploys the `dist` folder. The first run may need you to approve the **github-pages** environment in **Settings** → **Environments** (one-time).
+
 ## Troubleshooting
 
 If you see **"Cannot find module @rollup/rollup-win32-x64-msvc"** or **"not a valid Win32 application"** on Windows, do a clean reinstall:
