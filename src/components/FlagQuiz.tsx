@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
+import { usePlayerName } from "../context/PlayerNameContext";
 import { getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
 import "./FlagQuiz.css";
@@ -16,6 +17,7 @@ function initRound(continent: string): { options: Country[]; correct: Country } 
 
 export default function FlagQuiz({ onBack }: Props) {
   const { continent } = useContinentFilter();
+  const { playerName } = usePlayerName();
   const [{ options, correct }, setRoundState] = useState(() => initRound(continent));
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
@@ -53,7 +55,7 @@ export default function FlagQuiz({ onBack }: Props) {
         <h1>Flag Quiz</h1>
         <div className="flag-stats">
           <span>Round {round}</span>
-          <span>Score: {score}</span>
+          <span>{playerName ? `${playerName}'s score: ${score}` : `Score: ${score}`}</span>
         </div>
       </header>
       <p className="flag-prompt">Which country is this flag?</p>

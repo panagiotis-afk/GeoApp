@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
+import { usePlayerName } from "../context/PlayerNameContext";
 import {
   getCountriesByContinent,
   getRandomCountries,
@@ -31,6 +32,7 @@ function initRound(continent: string): { countries: Country[]; cities: { capital
 
 export default function CityCountryMap({ onBack }: Props) {
   const { continent } = useContinentFilter();
+  const { playerName } = usePlayerName();
   const [roundState, setRoundState] = useState(() => initRound(continent));
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
@@ -147,7 +149,7 @@ export default function CityCountryMap({ onBack }: Props) {
         <h1>Map the City</h1>
         <div className="map-stats">
           <span>Round {round}</span>
-          <span>Score: {score}</span>
+          <span>{playerName ? `${playerName}'s score: ${score}` : `Score: ${score}`}</span>
         </div>
       </header>
       <p className="map-instruction">

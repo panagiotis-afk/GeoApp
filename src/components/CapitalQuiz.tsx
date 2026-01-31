@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
+import { usePlayerName } from "../context/PlayerNameContext";
 import {
   countries,
   getCountriesByContinent,
@@ -51,6 +52,7 @@ function initRound(continent: string): { target: Country } {
 
 export default function CapitalQuiz({ onBack }: Props) {
   const { continent } = useContinentFilter();
+  const { playerName } = usePlayerName();
   const [{ target }, setRoundState] = useState(() => initRound(continent));
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
@@ -103,7 +105,7 @@ export default function CapitalQuiz({ onBack }: Props) {
         <h1>Capital Quiz</h1>
         <div className="capital-stats">
           <span>Round {round}</span>
-          <span>Score: {score}</span>
+          <span>{playerName ? `${playerName}'s score: ${score}` : `Score: ${score}`}</span>
         </div>
       </header>
       <p className="capital-prompt">
