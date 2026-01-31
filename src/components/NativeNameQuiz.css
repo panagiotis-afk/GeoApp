@@ -222,3 +222,25 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+
+@media (max-width: 768px) {
+  .native-game {
+    padding: 1rem;
+  }
+
+  .native-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .native-option {
+    padding: 1rem;
+    min-height: 48px;
+  }
+
+  .native-summary-actions .btn-primary,
+  .native-summary-actions .btn-secondary {
+    flex: 1;
+    min-width: 100px;
+    padding: 0.75rem 1rem;
+  }
+}

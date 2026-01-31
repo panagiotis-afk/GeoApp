@@ -157,3 +157,34 @@
 .trail-empty strong {
   color: var(--text);
 }
+
+@media (max-width: 768px) {
+  .trail-game {
+    padding: 1rem;
+  }
+
+  .trail-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .trail-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trail-input {
+    min-width: 0;
+    padding: 0.75rem 1rem;
+    min-height: 48px;
+  }
+
+  .trail-form .btn-primary {
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+  }
+
+  .trail-won .btn-primary {
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+  }
+}

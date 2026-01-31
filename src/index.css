@@ -90,6 +90,11 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Safe area for notched devices */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -97,15 +102,43 @@ body {
   color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
+  /* 16px base avoids iOS zoom on input focus */
+  font-size: 16px;
 }
 
 #root {
   min-height: 100vh;
 }
 
+/* Touch-friendly: minimum 44px tap target where it makes sense */
+button:not(.theme-picker-option),
+a[role="button"],
+.mode-card,
+.flag-option,
+.native-option,
+.capital-option,
+.country-info-card,
+.home-nav-tab {
+  min-height: 44px;
+}
+.home-nav-tab,
+.mode-card {
+  min-width: 44px;
+}
+
+button,
+select,
+input {
+  font-size: 1rem;
+}
+
 button {
   font-family: inherit;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 input {
@@ -115,6 +148,31 @@ input {
 .app {
   position: relative;
   min-height: 100vh;
+}
+
+/* Game summary overlays: scrollable and padded on small screens */
+[class$="-summary-overlay"] {
+  padding: 1rem;
+  align-items: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+[class$="-summary"] {
+  margin: auto;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  [class$="-summary-overlay"] {
+    padding: 0.75rem;
+  }
+
+  .btn-back {
+    min-height: 44px;
+    padding: 0.6rem 1rem !important;
+  }
 }
 
 [data-reduce-motion="true"] *,

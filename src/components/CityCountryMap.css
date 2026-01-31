@@ -303,3 +303,34 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+
+@media (max-width: 768px) {
+  .map-game {
+    padding: 1rem;
+  }
+
+  .map-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .map-drop-zones {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .map-zone {
+    min-height: 80px;
+    padding: 1rem;
+  }
+
+  .map-zone-city {
+    min-height: 44px;
+  }
+
+  .map-summary-actions .btn-primary,
+  .map-summary-actions .btn-secondary {
+    flex: 1;
+    min-width: 100px;
+    padding: 0.75rem 1rem;
+  }
+}

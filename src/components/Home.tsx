@@ -53,6 +53,7 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
   const { stats } = useGameStats();
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const [section, setSection] = useState<MainSection>("games");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(playerName);
 
@@ -84,6 +85,15 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
     <div className="home">
       <header className="home-header">
         <div className="home-header-inner">
+          <button
+            type="button"
+            className="home-sidebar-toggle"
+            onClick={() => setSidebarOpen((o) => !o)}
+            aria-label={sidebarOpen ? "Close settings" : "Open settings"}
+            aria-expanded={sidebarOpen}
+          >
+            {sidebarOpen ? "✕" : "☰"}
+          </button>
           <span className="logo-icon">🌍</span>
           <h1 className="logo-title">GeoQuest</h1>
           <p className="tagline">Geography, one guess at a time</p>
@@ -110,7 +120,20 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
         </div>
       </header>
       <div className="home-body">
-        <aside className="home-sidebar" aria-label="Settings">
+        {sidebarOpen && (
+          <div
+            className="home-sidebar-backdrop"
+            onClick={() => setSidebarOpen(false)}
+            onKeyDown={(e) => e.key === "Escape" && setSidebarOpen(false)}
+            role="button"
+            tabIndex={-1}
+            aria-label="Close settings"
+          />
+        )}
+        <aside
+          className={`home-sidebar ${sidebarOpen ? "home-sidebar-open" : ""}`}
+          aria-label="Settings"
+        >
           <div className="home-sidebar-section">
             <span className="home-sidebar-label">Theme</span>
             <ThemePicker />
