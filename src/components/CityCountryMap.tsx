@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
+import { useGameStats } from "../context/GameStatsContext";
 import {
   getCountriesByContinent,
   getRandomCountries,
@@ -33,6 +34,7 @@ function initRound(continent: string): { countries: Country[]; cities: { capital
 export default function CityCountryMap({ onBack }: Props) {
   const { continent } = useContinentFilter();
   const { playerName } = usePlayerName();
+  const { addSession } = useGameStats();
   const [roundState, setRoundState] = useState(() => initRound(continent));
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
@@ -40,6 +42,31 @@ export default function CityCountryMap({ onBack }: Props) {
   const [placedCapitals, setPlacedCapitals] = useState<Set<string>>(new Set());
   const [checked, setChecked] = useState(false);
   const [dragOver, setDragOver] = useState<string | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const handleShare = useCallback(() => {
+    const text = `I got ${score} correct in ${round} round${round === 1 ? "" : "s"} on Map the City in GeoQuest!`;
+    navigator.clipboard?.writeText(text).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  }, [score, round]);
+
+  const handleBack = useCallback(() => {
+    addSession("map", score, round);
+    onBack();
+  }, [addSession, onBack, score, round]);
+
+  const handlePlayAgain = useCallback(() => {
+    setShowSummary(false);
+    setRound(1);
+    setScore(0);
+    setRoundState(initRound(continent));
+    setPlacements({});
+    setPlacedCapitals(new Set());
+    setChecked(false);
+  }, [continent]);
 
   const { countries, cities } = roundState;
   const pool = useMemo(() => getCountriesByContinent(continent), [continent]);
@@ -126,7 +153,7 @@ export default function CityCountryMap({ onBack }: Props) {
     return (
       <div className="map-game">
         <header className="map-header">
-          <button type="button" className="btn-back" onClick={onBack}>
+          <button type="button" className="btn-back" onClick={() => onBack()}>
             ← Back
           </button>
           <h1>Map the City</h1>
@@ -142,14 +169,38 @@ export default function CityCountryMap({ onBack }: Props) {
 
   return (
     <div className="map-game">
+      {showSummary && (
+        <div className="map-summary-overlay" role="dialog" aria-label="Session summary">
+          <div className="map-summary">
+            <h2>Session summary</h2>
+            <p className="map-summary-text">
+              You got <strong>{score}</strong> correct in <strong>{round}</strong> {round === 1 ? "round" : "rounds"}.
+            </p>
+            <div className="map-summary-actions">
+              <button type="button" className="btn-secondary" onClick={handleShare}>
+                {shareCopied ? "Copied!" : "Share"}
+              </button>
+              <button type="button" className="btn-primary" onClick={handlePlayAgain}>
+                Play again
+              </button>
+              <button type="button" className="btn-secondary" onClick={handleBack}>
+                Back to menu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="map-header">
-        <button type="button" className="btn-back" onClick={onBack}>
+        <button type="button" className="btn-back" onClick={handleBack}>
           ← Back
         </button>
         <h1>Map the City</h1>
         <div className="map-stats">
           <span>Round {round}</span>
           <span>{playerName ? `${playerName}'s score: ${score}` : `Score: ${score}`}</span>
+          <button type="button" className="map-end-session" onClick={() => setShowSummary(true)} aria-label="End session">
+            End session
+          </button>
         </div>
       </header>
       <p className="map-instruction">

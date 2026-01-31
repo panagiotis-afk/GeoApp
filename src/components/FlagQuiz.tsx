@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
+import { useGameStats } from "../context/GameStatsContext";
 import { getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
 import "./FlagQuiz.css";
@@ -18,11 +19,36 @@ function initRound(continent: string): { options: Country[]; correct: Country } 
 export default function FlagQuiz({ onBack }: Props) {
   const { continent } = useContinentFilter();
   const { playerName } = usePlayerName();
+  const { addSession } = useGameStats();
   const [{ options, correct }, setRoundState] = useState(() => initRound(continent));
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const handleShare = useCallback(() => {
+    const text = `I got ${score} correct in ${round} round${round === 1 ? "" : "s"} on Flag Quiz in GeoQuest!`;
+    navigator.clipboard?.writeText(text).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  }, [score, round]);
+
+  const handleBack = useCallback(() => {
+    addSession("flag", score, round);
+    onBack();
+  }, [addSession, onBack, score, round]);
+
+  const handlePlayAgain = useCallback(() => {
+    setShowSummary(false);
+    setRound(1);
+    setScore(0);
+    setRoundState(initRound(continent));
+    setPicked(null);
+    setRevealed(false);
+  }, [continent]);
 
   const shuffledOptions = useMemo(
     () => [...options].sort(() => Math.random() - 0.5),
@@ -48,14 +74,38 @@ export default function FlagQuiz({ onBack }: Props) {
 
   return (
     <div className="flag-game">
+      {showSummary && (
+        <div className="flag-summary-overlay" role="dialog" aria-label="Session summary">
+          <div className="flag-summary">
+            <h2>Session summary</h2>
+            <p className="flag-summary-text">
+              You got <strong>{score}</strong> correct in <strong>{round}</strong> {round === 1 ? "round" : "rounds"}.
+            </p>
+            <div className="flag-summary-actions">
+              <button type="button" className="btn-secondary" onClick={handleShare}>
+                {shareCopied ? "Copied!" : "Share"}
+              </button>
+              <button type="button" className="btn-primary" onClick={handlePlayAgain}>
+                Play again
+              </button>
+              <button type="button" className="btn-secondary" onClick={handleBack}>
+                Back to menu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="flag-header">
-        <button type="button" className="btn-back" onClick={onBack}>
+        <button type="button" className="btn-back" onClick={handleBack}>
           ← Back
         </button>
         <h1>Flag Quiz</h1>
         <div className="flag-stats">
           <span>Round {round}</span>
           <span>{playerName ? `${playerName}'s score: ${score}` : `Score: ${score}`}</span>
+          <button type="button" className="flag-end-session" onClick={() => setShowSummary(true)} aria-label="End session">
+            End session
+          </button>
         </div>
       </header>
       <p className="flag-prompt">Which country is this flag?</p>

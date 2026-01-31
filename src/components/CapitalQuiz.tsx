@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
+import { useGameStats } from "../context/GameStatsContext";
 import {
   countries,
   getCountriesByContinent,
@@ -53,12 +54,37 @@ function initRound(continent: string): { target: Country } {
 export default function CapitalQuiz({ onBack }: Props) {
   const { continent } = useContinentFilter();
   const { playerName } = usePlayerName();
+  const { addSession } = useGameStats();
   const [{ target }, setRoundState] = useState(() => initRound(continent));
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [correct, setCorrect] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const handleShare = useCallback(() => {
+    const text = `I got ${score} correct in ${round} round${round === 1 ? "" : "s"} on Capital Quiz in GeoQuest!`;
+    navigator.clipboard?.writeText(text).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  }, [score, round]);
+
+  const handleBack = useCallback(() => {
+    addSession("capital", score, round);
+    onBack();
+  }, [addSession, onBack, score, round]);
+
+  const handlePlayAgain = useCallback(() => {
+    setShowSummary(false);
+    setRound(1);
+    setScore(0);
+    setRoundState(initRound(continent));
+    setRevealed(false);
+    setSelectedOption(null);
+  }, [continent]);
 
   const pool = useMemo(() => getCountriesByContinent(continent), [continent]);
   const options = useMemo(() => buildOptions(target, pool), [target, pool]);
@@ -86,7 +112,7 @@ export default function CapitalQuiz({ onBack }: Props) {
     return (
       <div className="capital-game">
         <header className="capital-header">
-          <button type="button" className="btn-back" onClick={onBack}>
+          <button type="button" className="btn-back" onClick={() => onBack()}>
             ← Back
           </button>
           <h1>Capital Quiz</h1>
@@ -98,14 +124,38 @@ export default function CapitalQuiz({ onBack }: Props) {
 
   return (
     <div className="capital-game">
+      {showSummary && (
+        <div className="capital-summary-overlay" role="dialog" aria-label="Session summary">
+          <div className="capital-summary">
+            <h2>Session summary</h2>
+            <p className="capital-summary-text">
+              You got <strong>{score}</strong> correct in <strong>{round}</strong> {round === 1 ? "round" : "rounds"}.
+            </p>
+            <div className="capital-summary-actions">
+              <button type="button" className="btn-secondary" onClick={handleShare}>
+                {shareCopied ? "Copied!" : "Share"}
+              </button>
+              <button type="button" className="btn-primary" onClick={handlePlayAgain}>
+                Play again
+              </button>
+              <button type="button" className="btn-secondary" onClick={handleBack}>
+                Back to menu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="capital-header">
-        <button type="button" className="btn-back" onClick={onBack}>
+        <button type="button" className="btn-back" onClick={handleBack}>
           ← Back
         </button>
         <h1>Capital Quiz</h1>
         <div className="capital-stats">
           <span>Round {round}</span>
           <span>{playerName ? `${playerName}'s score: ${score}` : `Score: ${score}`}</span>
+          <button type="button" className="capital-end-session" onClick={() => setShowSummary(true)} aria-label="End session">
+            End session
+          </button>
         </div>
       </header>
       <p className="capital-prompt">

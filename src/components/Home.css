@@ -100,6 +100,48 @@
   margin-left: 0.25rem;
 }
 
+.home-sidebar-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.home-sidebar-checkbox input {
+  cursor: pointer;
+}
+
+.home-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.home-stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.home-stat-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.home-stat-value {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.home-stats-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .home-content {
   flex: 1;
   display: flex;
@@ -316,6 +358,30 @@
   line-height: 1.5;
 }
 
+.mode-card-daily {
+  cursor: default;
+}
+
+.mode-card-daily:hover {
+  transform: none;
+}
+
+.home-daily-play {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home-daily-play:hover {
+  background: var(--accent-hover);
+}
+
 .home-footer {
   margin-top: auto;
   padding-top: 2rem;
@@ -326,4 +392,18 @@
 
 .home-footer p {
   margin: 0;
+}
+
+.home-shortcuts {
+  margin-top: 0.5rem !important;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.home-shortcuts kbd {
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
 }

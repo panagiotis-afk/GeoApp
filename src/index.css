@@ -72,6 +72,20 @@
   --error: #f87171;
 }
 
+[data-theme="highcontrast"] {
+  --bg: #000;
+  --surface: #111;
+  --surface-hover: #222;
+  --border: #fff;
+  --text: #fff;
+  --text-muted: #ccc;
+  --accent: #0ff;
+  --accent-hover: #0dd;
+  --success: #0f0;
+  --warning: #ff0;
+  --error: #f00;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -101,4 +115,12 @@ input {
 .app {
   position: relative;
   min-height: 100vh;
+}
+
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }

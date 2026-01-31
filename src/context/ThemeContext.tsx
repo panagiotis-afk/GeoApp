@@ -9,7 +9,7 @@ import {
 
 const STORAGE_KEY = "geo-quest-theme";
 
-export const themeIds = ["dark", "light", "ocean", "forest", "sunset"] as const;
+export const themeIds = ["dark", "light", "ocean", "forest", "sunset", "highcontrast"] as const;
 export type ThemeId = (typeof themeIds)[number];
 
 export const themeLabels: Record<ThemeId, string> = {
@@ -18,6 +18,7 @@ export const themeLabels: Record<ThemeId, string> = {
   ocean: "Ocean",
   forest: "Forest",
   sunset: "Sunset",
+  highcontrast: "High contrast",
 };
 
 type ThemeContextValue = {

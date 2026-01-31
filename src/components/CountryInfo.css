@@ -36,6 +36,22 @@
   outline: none;
 }
 
+.country-info-surprise {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.country-info-surprise:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
 .country-info-picker-title {
   margin: 0 0 0.75rem;
   font-size: 1rem;
@@ -138,6 +154,17 @@
   color: var(--text);
 }
 
+.country-info-detail-borders {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.country-info-detail-borders strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
 .country-info-section {
   margin-bottom: 1.25rem;
 }
@@ -172,16 +199,27 @@
   margin-top: 1.25rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.country-info-wiki {
+.country-info-link {
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--accent);
   text-decoration: none;
 }
 
-.country-info-wiki:hover {
+.country-info-link:hover {
   color: var(--accent-hover);
   text-decoration: underline;
+}
+
+.country-info-trail-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }

@@ -8,6 +8,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { useContinentFilter } from "../context/ContinentFilterContext";
+import { useGameStats } from "../context/GameStatsContext";
 import { getCountriesByContinent, getCountryClosestTo, getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
 import "leaflet/dist/leaflet.css";
@@ -212,6 +213,7 @@ function formatTime(seconds: number): string {
 
 export default function PinTheCountry({ onBack }: Props) {
   const { continent } = useContinentFilter();
+  const { addSession } = useGameStats();
   const pool = getCountriesByContinent(continent);
 
   const [target, setTarget] = useState<Country | null>(() =>
@@ -228,6 +230,11 @@ export default function PinTheCountry({ onBack }: Props) {
   const [gameOver, setGameOver] = useState<"goal" | "time" | null>(null);
   const [finalElapsed, setFinalElapsed] = useState(0);
   const pauseStartedAtRef = useRef<number | null>(null);
+
+  const handleBack = useCallback(() => {
+    addSession("pin", correctCount, round);
+    onBack();
+  }, [addSession, onBack, correctCount, round]);
 
   const goalConfig = PIN_GOALS.find((g) => g.id === goal);
   const isTimeGoal = goalConfig && "targetSeconds" in goalConfig;
@@ -306,7 +313,7 @@ export default function PinTheCountry({ onBack }: Props) {
     return (
       <div className="pin-game">
         <header className="pin-header">
-          <button type="button" className="btn-back" onClick={onBack}>
+          <button type="button" className="btn-back" onClick={handleBack}>
             ← Back
           </button>
           <h1>Pin the Country</h1>
@@ -324,7 +331,7 @@ export default function PinTheCountry({ onBack }: Props) {
     return (
       <div className="pin-game">
         <header className="pin-header">
-          <button type="button" className="btn-back" onClick={onBack}>
+          <button type="button" className="btn-back" onClick={handleBack}>
             ← Back
           </button>
           <h1>Pin the Country</h1>
@@ -340,7 +347,7 @@ export default function PinTheCountry({ onBack }: Props) {
             <button type="button" className="btn-primary" onClick={handlePlayAgain}>
               Play again
             </button>
-            <button type="button" className="btn-back pin-btn-secondary" onClick={onBack}>
+            <button type="button" className="btn-back pin-btn-secondary" onClick={handleBack}>
               Back to menu
             </button>
           </div>
@@ -352,7 +359,7 @@ export default function PinTheCountry({ onBack }: Props) {
   return (
     <div className="pin-game">
       <header className="pin-header">
-        <button type="button" className="btn-back" onClick={onBack}>
+        <button type="button" className="btn-back" onClick={handleBack}>
           ← Back
         </button>
         <h1>Pin the Country</h1>

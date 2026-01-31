@@ -5,7 +5,11 @@ import type { Country } from "../data/countries";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import "./CountryTrail.css";
 
-type Props = { onBack: () => void };
+type Props = {
+  onBack: () => void;
+  initialStartCode?: string | null;
+  clearInitialStartCode?: () => void;
+};
 
 /** Among filtered countries, those that have at least one neighbour also in the set */
 function getTrailEligible(filtered: Country[]): Country[] {
@@ -24,7 +28,24 @@ function pickRandomPair(trailEligible: Country[]): [Country, Country] {
   return start.code === end.code ? pickRandomPair(shuffled) : [start, end];
 }
 
-export default function CountryTrail({ onBack }: Props) {
+function pickStartEnd(
+  trailEligible: Country[],
+  filteredCountries: Country[],
+  initialStartCode?: string | null
+): [Country, Country] {
+  if (trailEligible.length < 2) return [filteredCountries[0]!, filteredCountries[1] ?? filteredCountries[0]!];
+  if (initialStartCode) {
+    const startCountry = getCountryByCode(initialStartCode);
+    if (startCountry && trailEligible.some((c) => c.code === initialStartCode)) {
+      const others = trailEligible.filter((c) => c.code !== initialStartCode);
+      const end = others[Math.floor(Math.random() * others.length)];
+      return [startCountry, end ?? startCountry];
+    }
+  }
+  return pickRandomPair(trailEligible);
+}
+
+export default function CountryTrail({ onBack, initialStartCode, clearInitialStartCode }: Props) {
   const { continent } = useContinentFilter();
   const filteredCountries = useMemo(
     () => getCountriesByContinent(continent),
@@ -36,17 +57,28 @@ export default function CountryTrail({ onBack }: Props) {
   );
 
   const [[start, end], setPair] = useState<[Country, Country]>(() =>
-    trailEligible.length >= 2 ? pickRandomPair(trailEligible) : [filteredCountries[0]!, filteredCountries[1] ?? filteredCountries[0]!]
+    pickStartEnd(trailEligible, filteredCountries, initialStartCode)
   );
 
   useEffect(() => {
     if (trailEligible.length >= 2) {
-      setPair(pickRandomPair(trailEligible));
+      setPair(pickStartEnd(trailEligible, filteredCountries, initialStartCode));
       setChain([]);
       setMessage(null);
       setWon(false);
+      clearInitialStartCode?.();
     }
   }, [continent]);
+
+  useEffect(() => {
+    if (initialStartCode && trailEligible.length >= 2) {
+      setPair(pickStartEnd(trailEligible, filteredCountries, initialStartCode));
+      setChain([]);
+      setMessage(null);
+      setWon(false);
+      clearInitialStartCode?.();
+    }
+  }, [initialStartCode]);
 
   const [chain, setChain] = useState<string[]>([]);
   const [input, setInput] = useState("");

@@ -90,3 +90,7 @@
 .theme-picker-swatch[data-theme-swatch="sunset"] {
   background: #c2410c;
 }
+.theme-picker-swatch[data-theme-swatch="highcontrast"] {
+  background: #000;
+  border-color: #fff;
+}

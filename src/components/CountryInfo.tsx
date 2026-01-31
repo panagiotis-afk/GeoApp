@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   CONTINENTS,
   getCountriesByContinent,
   getCountryByCode,
 } from "../data/countries";
+import { getNeighbours } from "../data/borders";
 import type { Country } from "../data/countries";
 import "./CountryInfo.css";
 
@@ -18,7 +19,22 @@ function getWikipediaUrl(country: Country): string {
   return `${WIKI_BASE}/${slug}`;
 }
 
-export default function CountryInfo() {
+function getMapUrl(country: Country): string {
+  return `https://www.openstreetmap.org/?mlat=${country.lat}&mlon=${country.lon}#map=5/${country.lat}/${country.lon}`;
+}
+
+/** Get neighbour country names we have in our data (for display). */
+function getBorderingCountryNames(code: string): string[] {
+  const codes = getNeighbours(code);
+  return codes
+    .map((c) => getCountryByCode(c)?.name)
+    .filter((n): n is string => n != null)
+    .sort();
+}
+
+type CountryInfoProps = { onPlayTrailFromCountry?: (countryCode: string) => void };
+
+export default function CountryInfo({ onPlayTrailFromCountry }: CountryInfoProps) {
   const [continent, setContinent] = useState<string>(INFO_CONTINENTS[0] ?? "Europe");
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
 
@@ -35,6 +51,13 @@ export default function CountryInfo() {
     setContinent(c);
     setSelectedCode(null);
   };
+
+  const handleSurpriseMe = useCallback(() => {
+    const list = getCountriesByContinent(continent);
+    if (list.length === 0) return;
+    const random = list[Math.floor(Math.random() * list.length)];
+    setSelectedCode(random.code);
+  }, [continent]);
 
   return (
     <div className="country-info">
@@ -55,6 +78,9 @@ export default function CountryInfo() {
             </option>
           ))}
         </select>
+        <button type="button" className="country-info-surprise" onClick={handleSurpriseMe} aria-label="Pick a random country">
+          🎲 Surprise me
+        </button>
       </div>
 
       <div className="country-info-picker">
@@ -103,6 +129,11 @@ export default function CountryInfo() {
               <p className="country-info-detail-continent">
                 Continent: <strong>{selectedCountry.continent}</strong>
               </p>
+              {getBorderingCountryNames(selectedCountry.code).length > 0 && (
+                <p className="country-info-detail-borders">
+                  Borders: <strong>{getBorderingCountryNames(selectedCountry.code).join(", ")}</strong>
+                </p>
+              )}
             </div>
           </div>
 
@@ -136,10 +167,27 @@ export default function CountryInfo() {
               href={getWikipediaUrl(selectedCountry)}
               target="_blank"
               rel="noopener noreferrer"
-              className="country-info-wiki"
+              className="country-info-link"
             >
               Read more on Wikipedia →
             </a>
+            <a
+              href={getMapUrl(selectedCountry)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="country-info-link"
+            >
+              View on map →
+            </a>
+            {onPlayTrailFromCountry && (
+              <button
+                type="button"
+                className="country-info-link country-info-trail-btn"
+                onClick={() => onPlayTrailFromCountry(selectedCountry.code)}
+              >
+                Play Country Trail from here →
+              </button>
+            )}
           </div>
         </article>
       )}

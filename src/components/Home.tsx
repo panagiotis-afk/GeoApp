@@ -3,6 +3,8 @@ import ThemePicker from "./ThemePicker";
 import CountryInfo from "./CountryInfo";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
+import { useGameStats, GAME_STATS_LABELS, type GameStatsKey } from "../context/GameStatsContext";
+import { useReduceMotion } from "../context/ReduceMotionContext";
 import { CONTINENTS } from "../data/countries";
 import "./Home.css";
 
@@ -15,14 +17,58 @@ type Props = {
   onPlayNative: () => void;
   onPlayCapital: () => void;
   onPlayMap: () => void;
+  onPlayBigger: () => void;
+  onPlaySpelling: () => void;
+  onPlayTrailFromCountry: (countryCode: string) => void;
 };
 
-export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative, onPlayCapital, onPlayMap }: Props) {
+const GAME_KEYS: GameStatsKey[] = ["pin", "trail", "flag", "native", "capital", "map", "bigger", "spelling"];
+
+const DAILY_CONTINENTS = ["Europe", "Asia", "Africa", "North America", "South America", "Oceania"] as const;
+type DailyGameId = "capital" | "flag" | "native" | "map" | "bigger" | "spelling";
+
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function getDailyChallenge(dateStr: string): { continent: string; gameLabel: string; gameId: DailyGameId } {
+  const continent = DAILY_CONTINENTS[hashStr(dateStr) % DAILY_CONTINENTS.length];
+  const games: { id: DailyGameId; label: string }[] = [
+    { id: "capital", label: "Capital Quiz" },
+    { id: "flag", label: "Flag Quiz" },
+    { id: "native", label: "Native Name Quiz" },
+    { id: "map", label: "Map the City" },
+    { id: "bigger", label: "Which is Bigger?" },
+    { id: "spelling", label: "Capital Spelling Quiz" },
+  ];
+  const game = games[hashStr(dateStr + "g") % games.length];
+  return { continent: continent!, gameLabel: game!.label, gameId: game!.id };
+}
+
+export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative, onPlayCapital, onPlayMap, onPlayBigger, onPlaySpelling, onPlayTrailFromCountry }: Props) {
   const { continent, setContinent } = useContinentFilter();
   const { playerName, setPlayerName } = usePlayerName();
+  const { stats } = useGameStats();
+  const { reduceMotion, setReduceMotion } = useReduceMotion();
   const [section, setSection] = useState<MainSection>("games");
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(playerName);
+
+  const dailyChallenge = getDailyChallenge(new Date().toISOString().slice(0, 10));
+  const handleDailyPlay = () => {
+    setContinent(dailyChallenge.continent as typeof continent);
+    const playHandlers = {
+      capital: onPlayCapital,
+      flag: onPlayFlag,
+      native: onPlayNative,
+      map: onPlayMap,
+      bigger: onPlayBigger,
+      spelling: onPlaySpelling,
+    };
+    playHandlers[dailyChallenge.gameId]();
+  };
 
   const handleSaveName = () => {
     setPlayerName(nameInput);
@@ -68,6 +114,35 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
           <div className="home-sidebar-section">
             <span className="home-sidebar-label">Theme</span>
             <ThemePicker />
+          </div>
+          <div className="home-sidebar-section">
+            <label className="home-sidebar-checkbox">
+              <input
+                type="checkbox"
+                checked={reduceMotion}
+                onChange={(e) => setReduceMotion(e.target.checked)}
+                aria-label="Reduce motion"
+              />
+              <span>Reduce motion</span>
+            </label>
+          </div>
+          <div className="home-sidebar-section">
+            <span className="home-sidebar-label">Stats</span>
+            <div className="home-stats">
+              {GAME_KEYS.map((key) => {
+                const entry = stats[key];
+                if (!entry || entry.totalRounds === 0) return null;
+                return (
+                  <div key={key} className="home-stat-row">
+                    <span className="home-stat-label">{GAME_STATS_LABELS[key]}</span>
+                    <span className="home-stat-value">{entry.totalCorrect} correct ({entry.totalRounds} rounds)</span>
+                  </div>
+                );
+              })}
+              {!GAME_KEYS.some((k) => stats[k] && stats[k]!.totalRounds > 0) && (
+                <p className="home-stats-empty">Play games to see stats here.</p>
+              )}
+            </div>
           </div>
           <div className="home-sidebar-section">
             <span className="home-sidebar-label">Your name</span>
@@ -158,17 +233,36 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
             <h2>Map the City</h2>
             <p>Drag cities (capitals) into their country. Match all four to score.</p>
           </button>
+          <button className="mode-card" onClick={onPlayBigger}>
+            <span className="mode-icon">📊</span>
+            <h2>Which is Bigger?</h2>
+            <p>Two countries — pick the one with the larger population. Quick comparison quiz.</p>
+          </button>
+          <button className="mode-card" onClick={onPlaySpelling}>
+            <span className="mode-icon">✏️</span>
+            <h2>Capital Spelling Quiz</h2>
+            <p>Type the capital of the country. Tolerant matching — get it close and we&apos;ll count it.</p>
+          </button>
+          <div className="mode-card mode-card-daily">
+            <span className="mode-icon">📅</span>
+            <h2>Today&apos;s challenge</h2>
+            <p>Get 5 correct in <strong>{dailyChallenge.gameLabel}</strong> ({dailyChallenge.continent}).</p>
+            <button type="button" className="btn-primary home-daily-play" onClick={handleDailyPlay}>
+              Play
+            </button>
+          </div>
             </div>
           </main>
         </>
       )}
       {section === "info" && (
         <main className="home-main home-main-info">
-          <CountryInfo />
+          <CountryInfo onPlayTrailFromCountry={onPlayTrailFromCountry} />
         </main>
       )}
           <footer className="home-footer">
             <p>Inspired by GeoGuessr & Travle</p>
+            <p className="home-shortcuts">Press <kbd>1</kbd>–<kbd>8</kbd> to start a game, <kbd>Esc</kbd> to go back.</p>
           </footer>
         </div>
       </div>
