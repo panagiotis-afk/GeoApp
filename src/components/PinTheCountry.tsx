@@ -1,11 +1,133 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+} from "react-leaflet";
+import L from "leaflet";
 import { getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
-import { haversineKm, pixelToLatLon, scoreFromDistanceKm } from "../utils/geo";
+import { haversineKm, scoreFromDistanceKm } from "../utils/geo";
+import "leaflet/dist/leaflet.css";
 import "./PinTheCountry.css";
 
-const WORLD_MAP_URL =
-  "https://upload.wikimedia.org/wikipedia/commons/8/83/Equirectangular_projection_SW.jpg";
+/** Tile layer configs: Streets, Country borders, Satellite, Elevation */
+const MAP_LAYERS = [
+  { id: "streets", name: "Streets", icon: "🗺️" },
+  { id: "borders", name: "Country borders", icon: "🛃" },
+  { id: "satellite", name: "Satellite", icon: "🛰️" },
+  { id: "elevation", name: "Elevation", icon: "⛰️" },
+] as const;
+
+const TILE_CONFIG: Record<string, { url: string; attribution: string }> = {
+  streets: {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  },
+  borders: {
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+  },
+  satellite: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution: "Tiles &copy; Esri",
+  },
+  elevation: {
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; OpenStreetMap contributors, SRTM | &copy; OpenTopoMap',
+  },
+};
+
+const DEFAULT_CENTER: [number, number] = [20, 0];
+const DEFAULT_ZOOM = 2;
+const MIN_ZOOM = 2;
+const MAX_ZOOM = 18;
+
+/** Fix default marker icons in Leaflet with bundlers (e.g. Vite) */
+function createIcon(color: string) {
+  return L.divIcon({
+    className: "pin-marker-icon",
+    html: `<span style="background:${color};width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,0.4);display:block;margin:-8px 0 0 -8px;"></span>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+  });
+}
+
+const guessIcon = createIcon("var(--accent)");
+const targetIcon = createIcon("var(--success)");
+
+type MapClickHandlerProps = {
+  onMapClick: (lat: number, lon: number) => void;
+  disabled: boolean;
+};
+
+function MapClickHandler({ onMapClick, disabled }: MapClickHandlerProps) {
+  useMapEvents({
+    click(e) {
+      if (disabled) return;
+      const { lat, lng } = e.latlng;
+      onMapClick(lat, lng);
+    },
+  });
+  return null;
+}
+
+type MapTypeSelectorProps = {
+  value: string;
+  onChange: (id: string) => void;
+};
+
+function MapTypeSelector({ value, onChange }: MapTypeSelectorProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = MAP_LAYERS.find((l) => l.id === value) ?? MAP_LAYERS[0];
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="map-type-selector" ref={ref}>
+      <button
+        type="button"
+        className="map-type-trigger"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        title="Map type"
+      >
+        <span className="map-type-icon" aria-hidden>{current.icon}</span>
+        <span className="map-type-label">{current.name}</span>
+        <span className="map-type-chevron" aria-hidden>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div className="map-type-menu" role="listbox" aria-label="Map type">
+          {MAP_LAYERS.map((layer) => (
+            <button
+              key={layer.id}
+              type="button"
+              role="option"
+              aria-selected={value === layer.id}
+              className={`map-type-option ${value === layer.id ? "active" : ""}`}
+              onClick={() => {
+                onChange(layer.id);
+                setOpen(false);
+              }}
+            >
+              <span className="map-type-option-icon" aria-hidden>{layer.icon}</span>
+              {layer.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type Props = { onBack: () => void };
 
@@ -16,14 +138,11 @@ export default function PinTheCountry({ onBack }: Props) {
   const [guess, setGuess] = useState<{ lat: number; lon: number } | null>(null);
   const [totalScore, setTotalScore] = useState(0);
   const [round, setRound] = useState(1);
+  const [mapType, setMapType] = useState<string>("streets");
 
   const handleMapClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    (lat: number, lon: number) => {
       if (!target || guess) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      const { lat, lon } = pixelToLatLon(x, y);
       setGuess({ lat, lon });
       const dist = haversineKm(lat, lon, target.lat, target.lon);
       setTotalScore((s) => s + scoreFromDistanceKm(dist));
@@ -64,43 +183,40 @@ export default function PinTheCountry({ onBack }: Props) {
       </header>
       <p className="pin-prompt">
         {guess === null
-          ? `Where is ${target.name}?`
+          ? `Where is ${target.name}? Click to guess. Change map type (top right). Zoom: scroll or two-finger pinch.`
           : `You were ${distanceKm} km away. +${roundScore} pts`}
       </p>
-      <div
-        className="map-container"
-        onClick={handleMapClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") e.currentTarget.click();
-        }}
-        aria-label="Click to place your guess"
-      >
-        <img
-          src={WORLD_MAP_URL}
-          alt="World map"
-          className="map-image"
-          draggable={false}
-        />
-        {guess && (
-          <>
-            <div
-              className="pin-marker pin-guess"
-              style={{
-                left: `${((guess.lon + 180) / 360) * 100}%`,
-                top: `${((90 - guess.lat) / 180) * 100}%`,
-              }}
-            />
-            <div
-              className="pin-marker pin-target"
-              style={{
-                left: `${((target.lon + 180) / 360) * 100}%`,
-                top: `${((90 - target.lat) / 180) * 100}%`,
-              }}
-            />
-          </>
-        )}
+      <div className="map-wrapper">
+        <div className="map-type-selector-wrap">
+          <MapTypeSelector value={mapType} onChange={setMapType} />
+        </div>
+        <MapContainer
+          center={DEFAULT_CENTER}
+          zoom={DEFAULT_ZOOM}
+          minZoom={MIN_ZOOM}
+          maxZoom={MAX_ZOOM}
+          scrollWheelZoom={true}
+          doubleClickZoom={true}
+          touchZoom={true}
+          zoomControl={true}
+          className="pin-map"
+          style={{ height: "100%", width: "100%" }}
+        >
+          <TileLayer
+            url={TILE_CONFIG[mapType]?.url ?? TILE_CONFIG.streets.url}
+            attribution={TILE_CONFIG[mapType]?.attribution ?? TILE_CONFIG.streets.attribution}
+          />
+          <MapClickHandler
+            onMapClick={handleMapClick}
+            disabled={guess !== null}
+          />
+          {guess && (
+            <>
+              <Marker position={[guess.lat, guess.lon]} icon={guessIcon} />
+              <Marker position={[target.lat, target.lon]} icon={targetIcon} />
+            </>
+          )}
+        </MapContainer>
       </div>
       {guess !== null && (
         <div className="pin-actions">

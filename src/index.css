@@ -1,4 +1,5 @@
-:root {
+:root,
+[data-theme="dark"] {
   --bg: #0f1419;
   --surface: #1a2332;
   --surface-hover: #243044;
@@ -13,6 +14,62 @@
   --radius: 12px;
   --font-sans: "Outfit", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+}
+
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --error: #dc2626;
+}
+
+[data-theme="ocean"] {
+  --bg: #0c4a6e;
+  --surface: #0e7490;
+  --surface-hover: #0891b2;
+  --border: #22d3ee;
+  --text: #e0f2fe;
+  --text-muted: #7dd3fc;
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --success: #2dd4bf;
+  --warning: #fbbf24;
+  --error: #f87171;
+}
+
+[data-theme="forest"] {
+  --bg: #14532d;
+  --surface: #166534;
+  --surface-hover: #15803d;
+  --border: #4ade80;
+  --text: #dcfce7;
+  --text-muted: #86efac;
+  --accent: #22c55e;
+  --accent-hover: #16a34a;
+  --success: #4ade80;
+  --warning: #facc15;
+  --error: #f87171;
+}
+
+[data-theme="sunset"] {
+  --bg: #431407;
+  --surface: #9a3412;
+  --surface-hover: #c2410c;
+  --border: #fdba74;
+  --text: #fff7ed;
+  --text-muted: #fed7aa;
+  --accent: #fb923c;
+  --accent-hover: #f97316;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --error: #f87171;
 }
 
 * {
@@ -39,4 +96,9 @@ button {
 
 input {
   font-family: inherit;
+}
+
+.app {
+  position: relative;
+  min-height: 100vh;
 }

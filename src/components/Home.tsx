@@ -1,3 +1,4 @@
+import ThemePicker from "./ThemePicker";
 import "./Home.css";
 
 type Props = {
@@ -15,6 +16,7 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag }: Props) {
           <h1>GeoQuest</h1>
           <p className="tagline">Geography, one guess at a time</p>
         </div>
+        <ThemePicker />
       </header>
       <main className="home-main">
         <div className="mode-grid">

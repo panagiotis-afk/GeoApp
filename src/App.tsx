@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ThemeProvider } from "./context/ThemeContext";
 import Home from "./components/Home";
 import PinTheCountry from "./components/PinTheCountry";
 import CountryTrail from "./components/CountryTrail";
@@ -10,8 +11,9 @@ export default function App() {
   const [mode, setMode] = useState<GameMode>("menu");
 
   return (
-    <div className="app">
-      {mode === "menu" && (
+    <ThemeProvider>
+      <div className="app">
+        {mode === "menu" && (
         <Home
           onPlayPin={() => setMode("pin")}
           onPlayTrail={() => setMode("trail")}
@@ -27,6 +29,7 @@ export default function App() {
       {mode === "flag" && (
         <FlagQuiz onBack={() => setMode("menu")} />
       )}
-    </div>
+      </div>
+    </ThemeProvider>
   );
 }
