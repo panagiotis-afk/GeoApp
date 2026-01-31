@@ -8,9 +8,11 @@ type Props = {
   onPlayTrail: () => void;
   onPlayFlag: () => void;
   onPlayNative: () => void;
+  onPlayCapital: () => void;
+  onPlayMap: () => void;
 };
 
-export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative }: Props) {
+export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative, onPlayCapital, onPlayMap }: Props) {
   const { continent, setContinent } = useContinentFilter();
 
   return (
@@ -61,7 +63,17 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative 
           <button className="mode-card" onClick={onPlayNative}>
             <span className="mode-icon">🗣️</span>
             <h2>Native Name Quiz</h2>
-            <p>We show the country in English; you type its name in the native language.</p>
+            <p>We show the country in English; you pick its name in the native language from 4 choices.</p>
+          </button>
+          <button className="mode-card" onClick={onPlayCapital}>
+            <span className="mode-icon">🏛️</span>
+            <h2>Capital Quiz</h2>
+            <p>Guess the capital of a country from 4 choices. Quick geography drill.</p>
+          </button>
+          <button className="mode-card" onClick={onPlayMap}>
+            <span className="mode-icon">🗺️</span>
+            <h2>Map the City</h2>
+            <p>Drag cities (capitals) into their country. Match all four to score.</p>
           </button>
         </div>
       </main>

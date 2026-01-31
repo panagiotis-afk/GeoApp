@@ -6,8 +6,10 @@ import PinTheCountry from "./components/PinTheCountry";
 import CountryTrail from "./components/CountryTrail";
 import FlagQuiz from "./components/FlagQuiz";
 import NativeNameQuiz from "./components/NativeNameQuiz";
+import CapitalQuiz from "./components/CapitalQuiz";
+import CityCountryMap from "./components/CityCountryMap";
 
-export type GameMode = "menu" | "pin" | "trail" | "flag" | "native";
+export type GameMode = "menu" | "pin" | "trail" | "flag" | "native" | "capital" | "map";
 
 export default function App() {
   const [mode, setMode] = useState<GameMode>("menu");
@@ -22,6 +24,8 @@ export default function App() {
           onPlayTrail={() => setMode("trail")}
           onPlayFlag={() => setMode("flag")}
           onPlayNative={() => setMode("native")}
+          onPlayCapital={() => setMode("capital")}
+          onPlayMap={() => setMode("map")}
         />
       )}
       {mode === "pin" && (
@@ -35,6 +39,12 @@ export default function App() {
       )}
       {mode === "native" && (
         <NativeNameQuiz onBack={() => setMode("menu")} />
+      )}
+      {mode === "capital" && (
+        <CapitalQuiz onBack={() => setMode("menu")} />
+      )}
+      {mode === "map" && (
+        <CityCountryMap onBack={() => setMode("menu")} />
       )}
       </div>
       </ContinentFilterProvider>
