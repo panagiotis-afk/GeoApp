@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ThemePicker from "./ThemePicker";
 import CountryInfo from "./CountryInfo";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats, GAME_STATS_LABELS, type GameStatsKey } from "../context/GameStatsContext";
 import { useReduceMotion } from "../context/ReduceMotionContext";
+import { supabase, supabaseEnvStatus, type ScoreRow } from "../lib/supabase";
 import { CONTINENTS } from "../data/countries";
 import "./Home.css";
 
-type MainSection = "games" | "info";
+type MainSection = "games" | "info" | "leaderboard";
 
 type Props = {
   onPlayPin: () => void;
@@ -63,8 +64,65 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
   const [bugSubmitting, setBugSubmitting] = useState(false);
   const [bugError, setBugError] = useState<string | null>(null);
   const [bugSuccess, setBugSuccess] = useState(false);
+  const [leaderboardScores, setLeaderboardScores] = useState<ScoreRow[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  const [submitTestLoading, setSubmitTestLoading] = useState(false);
 
   const dailyChallenge = getDailyChallenge(new Date().toISOString().slice(0, 10));
+
+  const fetchLeaderboard = () => {
+    if (!supabase) return;
+    setLeaderboardLoading(true);
+    setLeaderboardError(null);
+    supabase
+      .schema("public")
+      .from("scores")
+      .select("id, player_name, score, created_at")
+      .order("score", { ascending: false })
+      .limit(10)
+      .then(({ data, error }) => {
+        setLeaderboardLoading(false);
+        if (error) {
+          setLeaderboardError(error.message);
+          return;
+        }
+        setLeaderboardScores((data as ScoreRow[]) ?? []);
+      });
+  };
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const refetchLeaderboard = () => {
+    if (!supabase) return;
+    setLeaderboardLoading(true);
+    supabase
+      .schema("public")
+      .from("scores")
+      .select("id, player_name, score, created_at")
+      .order("score", { ascending: false })
+      .limit(10)
+      .then(({ data, error }) => {
+        setLeaderboardLoading(false);
+        if (!error) setLeaderboardScores((data as ScoreRow[]) ?? []);
+      });
+  };
+
+  const handleSubmitTestScore = async () => {
+    if (!supabase) return;
+    setSubmitTestLoading(true);
+    const name = playerName || "Anonymous";
+    const { error } = await supabase.schema("public").from("scores").insert({ player_name: name, score: 100 });
+    setSubmitTestLoading(false);
+    if (error) {
+      setLeaderboardError(error.message);
+      return;
+    }
+    setLeaderboardError(null);
+    refetchLeaderboard();
+  };
   const handleDailyPlay = () => {
     setContinent(dailyChallenge.continent as typeof continent);
     const playHandlers = {
@@ -194,6 +252,15 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
         >
           📖 Info
         </button>
+        <button
+          type="button"
+          className={`home-nav-tab ${section === "leaderboard" ? "active" : ""}`}
+          onClick={() => setSection("leaderboard")}
+          aria-pressed={section === "leaderboard"}
+          aria-label="Leaderboard section"
+        >
+          🏆 Leaderboard
+        </button>
           </nav>
         </div>
       </header>
@@ -244,6 +311,46 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
                 <p className="home-stats-empty">Play games to see stats here.</p>
               )}
             </div>
+          </div>
+          <div className="home-sidebar-section">
+            <span className="home-sidebar-label">Leaderboard (Supabase)</span>
+            {!supabase ? (
+              <div className="home-leaderboard-env-msg">
+                <p>Env: URL {supabaseEnvStatus.urlSet ? "✓" : "✗"} · Key {supabaseEnvStatus.keySet ? "✓" : "✗"}</p>
+                <p>Set both in .env.local and <strong>restart dev server</strong> (<code>npm run dev</code>).</p>
+              </div>
+            ) : leaderboardLoading && leaderboardScores.length === 0 ? (
+              <p className="home-leaderboard-loading">Loading scores…</p>
+            ) : leaderboardError ? (
+              <div className="home-leaderboard-error-wrap">
+                <p className="home-leaderboard-error" role="alert">{leaderboardError}</p>
+                <p className="home-leaderboard-hint">See <code>supabase/SUPABASE_SETUP.md</code> for setup steps.</p>
+              </div>
+            ) : (
+              <>
+                <ul className="home-leaderboard-list" aria-label="Top scores">
+                  {leaderboardScores.length === 0 ? (
+                    <li className="home-leaderboard-empty">No scores yet.</li>
+                  ) : (
+                    leaderboardScores.map((s, i) => (
+                      <li key={s.id} className="home-leaderboard-row">
+                        <span className="home-leaderboard-rank">{i + 1}.</span>
+                        <span className="home-leaderboard-name">{s.player_name}</span>
+                        <span className="home-leaderboard-score">{s.score}</span>
+                      </li>
+                    ))
+                  )}
+                </ul>
+                <button
+                  type="button"
+                  className="home-leaderboard-test-btn"
+                  onClick={handleSubmitTestScore}
+                  disabled={submitTestLoading}
+                >
+                  {submitTestLoading ? "Saving…" : "Add test score"}
+                </button>
+              </>
+            )}
           </div>
           <div className="home-sidebar-section">
             <span className="home-sidebar-label">Your name</span>
@@ -471,6 +578,47 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
       {section === "info" && (
         <main className="home-main home-main-info">
           <CountryInfo onPlayTrailFromCountry={onPlayTrailFromCountry} />
+        </main>
+      )}
+      {section === "leaderboard" && (
+        <main className="home-main home-main-leaderboard">
+          <h2 className="home-leaderboard-title">Top scores (public.scores)</h2>
+          {!supabase ? (
+            <p className="home-leaderboard-main-msg">Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env.local and restart the dev server.</p>
+          ) : leaderboardLoading && leaderboardScores.length === 0 ? (
+            <p className="home-leaderboard-main-msg">Loading scores…</p>
+          ) : leaderboardError ? (
+            <div className="home-leaderboard-main-error">
+              <p role="alert">{leaderboardError}</p>
+              <button type="button" className="home-leaderboard-refresh" onClick={fetchLeaderboard}>Try again</button>
+            </div>
+          ) : (
+            <>
+              <ol className="home-leaderboard-main-list" aria-label="Top 10 scores">
+                {leaderboardScores.length === 0 ? (
+                  <li className="home-leaderboard-main-empty">No scores yet. Play games and add your name in the sidebar to appear here!</li>
+                ) : (
+                  leaderboardScores.map((s, i) => (
+                    <li key={s.id} className="home-leaderboard-main-row">
+                      <span className="home-leaderboard-main-rank">{i + 1}</span>
+                      <span className="home-leaderboard-main-name">{s.player_name}</span>
+                      <span className="home-leaderboard-main-score">{s.score}</span>
+                    </li>
+                  ))
+                )}
+              </ol>
+              {supabase && (
+                <div className="home-leaderboard-main-actions">
+                  <button type="button" className="home-leaderboard-refresh" onClick={fetchLeaderboard} disabled={leaderboardLoading}>
+                    {leaderboardLoading ? "Refreshing…" : "Refresh"}
+                  </button>
+                  <button type="button" className="home-leaderboard-test-btn" onClick={handleSubmitTestScore} disabled={submitTestLoading}>
+                    {submitTestLoading ? "Saving…" : "Add test score"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </main>
       )}
           <footer className="home-footer">

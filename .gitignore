@@ -8,6 +8,9 @@ dist
 .env.local
 .env.*.local
 
+# Generated from .env.local (contains Supabase keys)
+src/lib/supabase-env.generated.ts
+
 # Editor / OS
 .DS_Store
 *.log
