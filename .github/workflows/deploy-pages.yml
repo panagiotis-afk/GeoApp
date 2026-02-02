@@ -37,6 +37,9 @@ jobs:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
           # Optional: set BUY_ME_A_COFFEE secret to show "Buy me a coffee" in the sidebar
           VITE_BUY_ME_A_COFFEE: ${{ secrets.BUY_ME_A_COFFEE }}
+          # Supabase (leaderboard) — add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY as repo secrets
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: npm run build
 
       # GitHub Pages serves 404.html for missing paths (e.g. /GeoApp/foo)
