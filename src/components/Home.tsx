@@ -5,7 +5,7 @@ import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats, GAME_STATS_LABELS, type GameStatsKey } from "../context/GameStatsContext";
 import { useReduceMotion } from "../context/ReduceMotionContext";
-import { supabase, supabaseEnvStatus, type ScoreRow } from "../lib/supabase";
+import { supabase, supabaseEnvStatus, submitScoreToLeaderboard, type ScoreRow } from "../lib/supabase";
 import { CONTINENTS } from "../data/countries";
 import "./Home.css";
 
@@ -114,14 +114,15 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
     if (!supabase) return;
     setSubmitTestLoading(true);
     const name = playerName || "Anonymous";
-    const { error } = await supabase.schema("public").from("scores").insert({ player_name: name, score: 100 });
-    setSubmitTestLoading(false);
-    if (error) {
-      setLeaderboardError(error.message);
-      return;
+    try {
+      await submitScoreToLeaderboard(name, 100);
+      setLeaderboardError(null);
+      refetchLeaderboard();
+    } catch (err) {
+      setLeaderboardError(err instanceof Error ? err.message : "Failed to submit");
+    } finally {
+      setSubmitTestLoading(false);
     }
-    setLeaderboardError(null);
-    refetchLeaderboard();
   };
   const handleDailyPlay = () => {
     setContinent(dailyChallenge.continent as typeof continent);

@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats } from "../context/GameStatsContext";
+import { submitScoreToLeaderboard } from "../lib/supabase";
 import {
   getCountriesByContinent,
   getRandomCountries,
@@ -54,9 +55,10 @@ export default function CityCountryMap({ onBack }: Props) {
   }, [score, round]);
 
   const handleBack = useCallback(() => {
+    submitScoreToLeaderboard(playerName ?? null, score);
     addSession("map", score, round);
     onBack();
-  }, [addSession, onBack, score, round]);
+  }, [addSession, onBack, playerName, score, round]);
 
   const handlePlayAgain = useCallback(() => {
     setShowSummary(false);
@@ -153,7 +155,7 @@ export default function CityCountryMap({ onBack }: Props) {
     return (
       <div className="map-game">
         <header className="map-header">
-          <button type="button" className="btn-back" onClick={() => onBack()}>
+          <button type="button" className="btn-back" onClick={handleBack}>
             ← Back
           </button>
           <h1>Map the City</h1>

@@ -1,6 +1,7 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats } from "../context/GameStatsContext";
+import { submitScoreToLeaderboard } from "../lib/supabase";
 import { getCountriesWithPopulation } from "../data/countries";
 import type { Country } from "../data/countries";
 import "./WhichIsBigger.css";
@@ -35,6 +36,9 @@ export default function WhichIsBigger({ onBack }: Props) {
   const [selectedOption, setSelectedOption] = useState<"left" | "right" | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const scoreRef = useRef({ playerName: playerName ?? null, score: 0 });
+  scoreRef.current = { playerName: playerName ?? null, score };
+  useEffect(() => () => { submitScoreToLeaderboard(scoreRef.current.playerName, scoreRef.current.score); }, []);
 
   const handleShare = useCallback(() => {
     const text = `I got ${score} correct in ${round} round${round === 1 ? "" : "s"} on Which is Bigger? in GeoQuest!`;
@@ -83,7 +87,7 @@ export default function WhichIsBigger({ onBack }: Props) {
     return (
       <div className="bigger-game">
         <header className="bigger-header">
-          <button type="button" className="btn-back" onClick={() => onBack()}>
+          <button type="button" className="btn-back" onClick={handleBack}>
             ← Back
           </button>
           <h1>Which is Bigger?</h1>

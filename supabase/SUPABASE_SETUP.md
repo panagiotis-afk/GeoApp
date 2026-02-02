@@ -45,7 +45,16 @@ You should see “Success. No rows returned.” That creates the `scores` table 
 
 ---
 
-## 4. Check that the table exists
+## 4. Run the upsert migration (one row per player, update on higher score)
+
+1. In Supabase **SQL Editor**, open a **+ New query**.
+2. Copy the contents of **`supabase/migration-upsert-scores.sql`** and paste into the editor.
+3. If you already have duplicate `player_name` rows, run the dedup comment block first (see comments in that file), then run the rest.
+4. Click **Run**. This adds a unique constraint on `player_name` and creates the `submit_score` RPC so the app can upsert (insert or update to keep the highest score per player).
+
+---
+
+## 5. Check that the table exists
 
 1. In Supabase, open **Table Editor** (left sidebar).
 2. You should see a **`scores`** table with columns: `id`, `player_name`, `score`, `created_at`.
@@ -53,7 +62,7 @@ You should see “Success. No rows returned.” That creates the `scores` table 
 
 ---
 
-## 5. Common errors and fixes
+## 6. Common errors and fixes
 
 | What you see | What to do |
 |--------------|------------|
@@ -66,7 +75,7 @@ You should see “Success. No rows returned.” That creates the `scores` table 
 
 ---
 
-## 6. Test from the app
+## 7. Test from the app
 
 1. Restart dev server: `npm run dev`.
 2. Open the app, open the **☰** sidebar.

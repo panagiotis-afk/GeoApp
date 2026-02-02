@@ -1,8 +1,10 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { getCountriesByContinent, getCountryByCode } from "../data/countries";
 import { getNeighbours } from "../data/borders";
 import type { Country } from "../data/countries";
 import { useContinentFilter } from "../context/ContinentFilterContext";
+import { usePlayerName } from "../context/PlayerNameContext";
+import { submitScoreToLeaderboard } from "../lib/supabase";
 import "./CountryTrail.css";
 
 type Props = {
@@ -47,6 +49,8 @@ function pickStartEnd(
 
 export default function CountryTrail({ onBack, initialStartCode, clearInitialStartCode }: Props) {
   const { continent } = useContinentFilter();
+  const { playerName } = usePlayerName();
+  const scoreRef = useRef({ playerName: null as string | null, score: 0 });
   const filteredCountries = useMemo(
     () => getCountriesByContinent(continent),
     [continent]
@@ -84,6 +88,14 @@ export default function CountryTrail({ onBack, initialStartCode, clearInitialSta
   const [input, setInput] = useState("");
   const [message, setMessage] = useState<"ok" | "wrong" | "repeat" | null>(null);
   const [won, setWon] = useState(false);
+
+  scoreRef.current = { playerName: playerName ?? null, score: chain.length };
+  useEffect(() => () => { submitScoreToLeaderboard(scoreRef.current.playerName, scoreRef.current.score); }, []);
+
+  const handleBack = useCallback(() => {
+    submitScoreToLeaderboard(playerName ?? null, chain.length);
+    onBack();
+  }, [onBack, playerName, chain.length]);
 
   const currentCode = chain.length === 0 ? start.code : chain[chain.length - 1];
   const currentCountry = getCountryByCode(currentCode)!;
@@ -146,7 +158,7 @@ export default function CountryTrail({ onBack, initialStartCode, clearInitialSta
     return (
       <div className="trail-game">
         <header className="trail-header">
-          <button type="button" className="btn-back" onClick={onBack}>
+          <button type="button" className="btn-back" onClick={handleBack}>
             ← Back
           </button>
           <h1>Country Trail</h1>
@@ -162,7 +174,7 @@ export default function CountryTrail({ onBack, initialStartCode, clearInitialSta
   return (
     <div className="trail-game">
       <header className="trail-header">
-        <button type="button" className="btn-back" onClick={onBack}>
+        <button type="button" className="btn-back" onClick={handleBack}>
           ← Back
         </button>
         <h1>Country Trail</h1>

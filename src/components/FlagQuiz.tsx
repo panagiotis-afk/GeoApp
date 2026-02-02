@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats } from "../context/GameStatsContext";
+import { submitScoreToLeaderboard } from "../lib/supabase";
 import { getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
 import "./FlagQuiz.css";
@@ -27,6 +28,9 @@ export default function FlagQuiz({ onBack }: Props) {
   const [revealed, setRevealed] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const scoreRef = useRef({ playerName: playerName ?? null, score: 0 });
+  scoreRef.current = { playerName: playerName ?? null, score };
+  useEffect(() => () => { submitScoreToLeaderboard(scoreRef.current.playerName, scoreRef.current.score); }, []);
 
   const handleShare = useCallback(() => {
     const text = `I got ${score} correct in ${round} round${round === 1 ? "" : "s"} on Flag Quiz in GeoQuest!`;
@@ -37,9 +41,10 @@ export default function FlagQuiz({ onBack }: Props) {
   }, [score, round]);
 
   const handleBack = useCallback(() => {
+    submitScoreToLeaderboard(playerName ?? null, score);
     addSession("flag", score, round);
     onBack();
-  }, [addSession, onBack, score, round]);
+  }, [addSession, onBack, playerName, score, round]);
 
   const handlePlayAgain = useCallback(() => {
     setShowSummary(false);

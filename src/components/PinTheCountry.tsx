@@ -8,7 +8,9 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import { useContinentFilter } from "../context/ContinentFilterContext";
+import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats } from "../context/GameStatsContext";
+import { submitScoreToLeaderboard } from "../lib/supabase";
 import { getCountriesByContinent, getCountryClosestTo, getRandomCountries } from "../data/countries";
 import type { Country } from "../data/countries";
 import "leaflet/dist/leaflet.css";
@@ -213,8 +215,10 @@ function formatTime(seconds: number): string {
 
 export default function PinTheCountry({ onBack }: Props) {
   const { continent } = useContinentFilter();
+  const { playerName } = usePlayerName();
   const { addSession } = useGameStats();
   const pool = getCountriesByContinent(continent);
+  const scoreRef = useRef({ playerName: playerName ?? null, score: 0 });
 
   const [target, setTarget] = useState<Country | null>(() =>
     getRandomCountries(1, continent)[0] ?? null
@@ -222,6 +226,8 @@ export default function PinTheCountry({ onBack }: Props) {
   const [guess, setGuess] = useState<{ lat: number; lon: number; correct: boolean } | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [round, setRound] = useState(1);
+  scoreRef.current = { playerName: playerName ?? null, score: correctCount };
+  useEffect(() => () => { submitScoreToLeaderboard(scoreRef.current.playerName, scoreRef.current.score); }, []);
   const [mapType, setMapType] = useState<string>("streets");
   const [goal, setGoal] = useState<string>("none");
   const [sessionStart, setSessionStart] = useState(() => Date.now());
@@ -232,9 +238,10 @@ export default function PinTheCountry({ onBack }: Props) {
   const pauseStartedAtRef = useRef<number | null>(null);
 
   const handleBack = useCallback(() => {
+    submitScoreToLeaderboard(playerName ?? null, correctCount);
     addSession("pin", correctCount, round);
     onBack();
-  }, [addSession, onBack, correctCount, round]);
+  }, [addSession, onBack, playerName, correctCount, round]);
 
   const goalConfig = PIN_GOALS.find((g) => g.id === goal);
   const isTimeGoal = goalConfig && "targetSeconds" in goalConfig;

@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats } from "../context/GameStatsContext";
+import { submitScoreToLeaderboard } from "../lib/supabase";
 import {
   countries,
   getCountriesByContinent,
@@ -63,6 +64,9 @@ export default function CapitalQuiz({ onBack }: Props) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const scoreRef = useRef({ playerName: playerName ?? null, score: 0 });
+  scoreRef.current = { playerName: playerName ?? null, score };
+  useEffect(() => () => { submitScoreToLeaderboard(scoreRef.current.playerName, scoreRef.current.score); }, []);
 
   const handleShare = useCallback(() => {
     const text = `I got ${score} correct in ${round} round${round === 1 ? "" : "s"} on Capital Quiz in GeoQuest!`;
@@ -73,9 +77,10 @@ export default function CapitalQuiz({ onBack }: Props) {
   }, [score, round]);
 
   const handleBack = useCallback(() => {
+    submitScoreToLeaderboard(playerName ?? null, score);
     addSession("capital", score, round);
     onBack();
-  }, [addSession, onBack, score, round]);
+  }, [addSession, onBack, playerName, score, round]);
 
   const handlePlayAgain = useCallback(() => {
     setShowSummary(false);

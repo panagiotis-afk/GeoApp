@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats } from "../context/GameStatsContext";
+import { submitScoreToLeaderboard } from "../lib/supabase";
 import {
   getCountriesByContinent,
   getRandomCountries,
@@ -42,13 +43,17 @@ export default function CapitalSpellingQuiz({ onBack }: Props) {
   const [correct, setCorrect] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const scoreRef = useRef({ playerName: playerName ?? null, score: 0 });
+  scoreRef.current = { playerName: playerName ?? null, score };
+  useEffect(() => () => { submitScoreToLeaderboard(scoreRef.current.playerName, scoreRef.current.score); }, []);
 
   const pool = useMemo(() => getCountriesByContinent(continent), [continent]);
 
   const handleBack = useCallback(() => {
+    submitScoreToLeaderboard(playerName ?? null, score);
     addSession("spelling", score, round);
     onBack();
-  }, [addSession, onBack, score, round]);
+  }, [addSession, onBack, playerName, score, round]);
 
   const handlePlayAgain = useCallback(() => {
     setShowSummary(false);
@@ -90,7 +95,7 @@ export default function CapitalSpellingQuiz({ onBack }: Props) {
     return (
       <div className="spelling-game">
         <header className="spelling-header">
-          <button type="button" className="btn-back" onClick={() => onBack()}>
+          <button type="button" className="btn-back" onClick={handleBack}>
             ← Back
           </button>
           <h1>Capital Spelling</h1>

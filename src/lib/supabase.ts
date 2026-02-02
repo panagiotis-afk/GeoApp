@@ -19,3 +19,14 @@ export type ScoreRow = {
   score: number;
   created_at: string;
 };
+
+/** Submit score to leaderboard (upsert by player_name, keeps highest score). No-op if playerName is null/empty or supabase not configured. */
+export async function submitScoreToLeaderboard(
+  playerName: string | null | undefined,
+  score: number
+): Promise<void> {
+  const name = playerName?.trim();
+  if (!name || !supabase) return;
+  const { error } = await supabase.rpc("submit_score", { p_player_name: name, p_score: score });
+  if (error) throw new Error(error.message);
+}
