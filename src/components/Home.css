@@ -198,6 +198,33 @@
   background: #991b1b;
 }
 
+.home-sidebar-coffee-btn {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.home-sidebar-coffee-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+}
+
+.home-sidebar-coffee-btn:active {
+  background: var(--surface-hover);
+}
+
 /* Bug report modal */
 .bug-report-backdrop {
   position: fixed;

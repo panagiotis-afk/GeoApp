@@ -290,6 +290,26 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
               🪲 Report a bug
             </button>
           </div>
+          {(() => {
+            const raw = (import.meta.env.VITE_BUY_ME_A_COFFEE as string | undefined)?.trim().replace(/\s+/g, "").replace(/\r/g, "");
+            if (!raw) return null;
+            const href = raw.startsWith("http://") || raw.startsWith("https://")
+              ? raw
+              : `https://buymeacoffee.com/${raw.replace(/^\/+|\/+$/g, "")}`;
+            return (
+              <div className="home-sidebar-section">
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home-sidebar-coffee-btn"
+                  aria-label="Buy me a coffee"
+                >
+                  ☕ Buy me a coffee
+                </a>
+              </div>
+            );
+          })()}
         </aside>
         {bugFormOpen && (
           <div

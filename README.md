@@ -82,6 +82,28 @@ Users can report bugs from the sidebar (**Report a bug**). To **create the issue
 
 **Fallback (no API):** If `VITE_BUG_REPORT_API_URL` is not set but `VITE_GITHUB_REPO` is, Submit opens GitHub’s new-issue page with the form pre-filled; the user submits there.
 
+## Buy me a coffee
+
+A **"Buy me a coffee"** link appears in the sidebar when configured. Visitors can support you via [Buy Me a Coffee](https://buymeacoffee.com).
+
+### What you need to do
+
+1. **Create a Buy Me a Coffee account**
+   - Go to [buymeacoffee.com](https://buymeacoffee.com) and sign up (free).
+   - Choose your username (e.g. `panagiotis`). Your page will be `https://buymeacoffee.com/panagiotis`.
+
+2. **Configure the app**
+   - **Local dev:** In `.env` (or `.env.local`) add:
+     ```bash
+     VITE_BUY_ME_A_COFFEE=panagiotis
+     ```
+     (Use your username, or a full URL like `https://buymeacoffee.com/panagiotis`.)
+   - **Production (GitHub Pages):** In your repo go to **Settings → Secrets and variables → Actions**. Add a **repository secret** named **`BUY_ME_A_COFFEE`** with value your username (e.g. `panagiotis`) or the full URL. The deploy workflow passes it into the build, so the link will show on the live site after the next deploy.
+
+3. **Redeploy** (if using GitHub Pages) so the build picks up the secret. The "☕ Buy me a coffee" button will then appear in the sidebar.
+
+If `VITE_BUY_ME_A_COFFEE` (or the `BUY_ME_A_COFFEE` secret) is not set, the button is hidden.
+
 ## Troubleshooting
 
 If you see **"Cannot find module @rollup/rollup-win32-x64-msvc"** or **"not a valid Win32 application"** on Windows, do a clean reinstall:

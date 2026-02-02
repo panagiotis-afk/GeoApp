@@ -1,0 +1,14 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+
+# Local env — do not commit (may contain secrets)
+.env.local
+.env.*.local
+
+# Editor / OS
+.DS_Store
+*.log
+*.tsbuildinfo
