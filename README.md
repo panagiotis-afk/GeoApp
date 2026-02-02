@@ -59,6 +59,29 @@ The workflow builds the app and deploys the `dist` folder. The first run may nee
 2. **Pages source** must be **GitHub Actions**, not "Deploy from a branch". In the repo: **Settings** → **Pages** → **Build and deployment** → **Source** → **GitHub Actions**.
 3. In **Actions**, confirm the "Deploy to GitHub Pages" workflow ran and the **deploy** step succeeded. Then open the URL from step 1.
 
+## Bug reports
+
+Users can report bugs from the sidebar (**Report a bug**). To **create the issue from the app** (no opening GitHub):
+
+1. **Create a GitHub Personal Access Token**  
+   GitHub → Settings → Developer settings → Personal access tokens → Generate new token (classic).  
+   Give it the **repo** scope. Copy the token (starts with `ghp_`).
+
+2. **Local dev**  
+   In `.env` add:
+   ```bash
+   VITE_BUG_REPORT_API_URL=http://localhost:5173/api/create-issue
+   GITHUB_TOKEN=ghp_your_token_here
+   GITHUB_REPO=your-username/GeoApp
+   ```
+   In one terminal run `npm run api`, in another run `npm run dev`. Submitting the bug form will create the issue on GitHub.
+
+3. **Production (e.g. GitHub Pages)**  
+   Deploy the API (e.g. [Vercel](https://vercel.com)): push the repo and add the `api` folder. In Vercel set env vars `GITHUB_TOKEN` and `GITHUB_REPO`.  
+   In your project `.env` set `VITE_BUG_REPORT_API_URL=https://your-app.vercel.app/api/create-issue`, then build and deploy the frontend. Visitors’ bug reports will create issues via the API.
+
+**Fallback (no API):** If `VITE_BUG_REPORT_API_URL` is not set but `VITE_GITHUB_REPO` is, Submit opens GitHub’s new-issue page with the form pre-filled; the user submits there.
+
 ## Troubleshooting
 
 If you see **"Cannot find module @rollup/rollup-win32-x64-msvc"** or **"not a valid Win32 application"** on Windows, do a clean reinstall:

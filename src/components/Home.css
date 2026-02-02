@@ -173,6 +173,186 @@
   color: var(--text-muted);
 }
 
+.home-sidebar-bug-btn {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-sidebar-bug-btn:hover {
+  background: #b91c1c;
+}
+
+.home-sidebar-bug-btn:active {
+  background: #991b1b;
+}
+
+/* Bug report modal */
+.bug-report-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.bug-report-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.bug-report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.bug-report-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bug-report-close {
+  padding: 0.35rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bug-report-close:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.bug-report-form {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bug-report-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bug-report-input,
+.bug-report-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.bug-report-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.bug-report-input:focus,
+.bug-report-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.bug-report-input:disabled,
+.bug-report-textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.bug-report-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #dc2626;
+}
+
+.bug-report-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.bug-report-cancel {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.bug-report-cancel:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.bug-report-submit {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bug-report-submit:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.bug-report-submit:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.bug-report-success {
+  margin: 0;
+  padding: 1.5rem 1.25rem;
+  font-size: 1rem;
+  color: var(--text);
+  text-align: center;
+}
+
 .home-content {
   flex: 1;
   display: flex;

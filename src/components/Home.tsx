@@ -56,6 +56,13 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(playerName);
+  const [bugFormOpen, setBugFormOpen] = useState(false);
+  const [bugTitle, setBugTitle] = useState("");
+  const [bugDescription, setBugDescription] = useState("");
+  const [bugSteps, setBugSteps] = useState("");
+  const [bugSubmitting, setBugSubmitting] = useState(false);
+  const [bugError, setBugError] = useState<string | null>(null);
+  const [bugSuccess, setBugSuccess] = useState(false);
 
   const dailyChallenge = getDailyChallenge(new Date().toISOString().slice(0, 10));
   const handleDailyPlay = () => {
@@ -79,6 +86,77 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
   const handleStartEditName = () => {
     setNameInput(playerName);
     setEditingName(true);
+  };
+
+  const buildBugBody = (): string => {
+    const parts: string[] = [bugDescription];
+    if (bugSteps.trim()) parts.push("\n\n**Steps to reproduce:**\n" + bugSteps.trim());
+    parts.push("\n\n---\n**Environment:**");
+    parts.push(`- URL: ${typeof window !== "undefined" ? window.location.href : "unknown"}`);
+    parts.push(`- Browser: ${typeof navigator !== "undefined" ? navigator.userAgent : "unknown"}`);
+    return parts.join("\n");
+  };
+
+  const handleBugSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const title = bugTitle.trim();
+    if (!title) return;
+    const body = buildBugBody();
+    const apiUrl = import.meta.env.VITE_BUG_REPORT_API_URL as string | undefined;
+    const repo = import.meta.env.VITE_GITHUB_REPO as string | undefined;
+
+    setBugError(null);
+    setBugSubmitting(true);
+
+    try {
+      if (apiUrl) {
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, body }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+        setBugSuccess(true);
+        setBugTitle("");
+        setBugDescription("");
+        setBugSteps("");
+        setTimeout(() => {
+          setBugFormOpen(false);
+          setBugSuccess(false);
+        }, 1500);
+      } else if (repo) {
+        const [owner, repoName] = repo.split("/").filter(Boolean);
+        if (owner && repoName) {
+          const url = `https://github.com/${owner}/${repoName}/issues/new?${new URLSearchParams({
+            title,
+            body,
+            labels: "bug",
+          }).toString()}`;
+          window.open(url, "_blank", "noopener,noreferrer");
+          setBugFormOpen(false);
+          setBugTitle("");
+          setBugDescription("");
+          setBugSteps("");
+        } else {
+          setBugError("VITE_GITHUB_REPO should be owner/repo (e.g. user/GeoApp).");
+        }
+      } else {
+        setBugError("Set VITE_BUG_REPORT_API_URL or VITE_GITHUB_REPO in .env");
+      }
+    } catch (err) {
+      setBugError(err instanceof Error ? err.message : "Failed to create issue");
+    } finally {
+      setBugSubmitting(false);
+    }
+  };
+
+  const closeBugForm = () => {
+    if (!bugSubmitting) {
+      setBugFormOpen(false);
+      setBugError(null);
+      setBugSuccess(false);
+    }
   };
 
   return (
@@ -202,7 +280,99 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
               )}
             </div>
           </div>
+          <div className="home-sidebar-section">
+            <button
+              type="button"
+              className="home-sidebar-bug-btn"
+              onClick={() => setBugFormOpen(true)}
+              aria-label="Report a bug"
+            >
+              🪲 Report a bug
+            </button>
+          </div>
         </aside>
+        {bugFormOpen && (
+          <div
+            className="bug-report-backdrop"
+            onClick={closeBugForm}
+            onKeyDown={(e) => e.key === "Escape" && closeBugForm()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bug-report-title"
+            aria-label="Report a bug"
+          >
+            <div className="bug-report-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="bug-report-header">
+                <h2 id="bug-report-title">Report a bug</h2>
+                <button
+                  type="button"
+                  className="bug-report-close"
+                  onClick={closeBugForm}
+                  disabled={bugSubmitting}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              {bugSuccess ? (
+                <p className="bug-report-success">Issue created. Thanks!</p>
+              ) : (
+                <form className="bug-report-form" onSubmit={handleBugSubmit}>
+                  <label htmlFor="bug-title" className="bug-report-label">
+                    Title
+                  </label>
+                  <input
+                    id="bug-title"
+                    type="text"
+                    className="bug-report-input"
+                    value={bugTitle}
+                    onChange={(e) => setBugTitle(e.target.value)}
+                    placeholder="Short description of the bug"
+                    required
+                    maxLength={256}
+                    disabled={bugSubmitting}
+                    aria-required
+                  />
+                  <label htmlFor="bug-description" className="bug-report-label">
+                    Description
+                  </label>
+                  <textarea
+                    id="bug-description"
+                    className="bug-report-textarea"
+                    value={bugDescription}
+                    onChange={(e) => setBugDescription(e.target.value)}
+                    placeholder="What happened? What did you expect?"
+                    rows={4}
+                    required
+                    disabled={bugSubmitting}
+                    aria-required
+                  />
+                  <label htmlFor="bug-steps" className="bug-report-label">
+                    Steps to reproduce (optional)
+                  </label>
+                  <textarea
+                    id="bug-steps"
+                    className="bug-report-textarea"
+                    value={bugSteps}
+                    onChange={(e) => setBugSteps(e.target.value)}
+                    placeholder="1. Go to...&#10;2. Click..."
+                    rows={3}
+                    disabled={bugSubmitting}
+                  />
+                  {bugError && <p className="bug-report-error" role="alert">{bugError}</p>}
+                  <div className="bug-report-actions">
+                    <button type="button" className="bug-report-cancel" onClick={closeBugForm} disabled={bugSubmitting}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="bug-report-submit" disabled={bugSubmitting}>
+                      {bugSubmitting ? "Submitting…" : "Submit"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
         <div className="home-content">
       {section === "games" && (
         <>

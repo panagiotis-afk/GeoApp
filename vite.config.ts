@@ -9,5 +9,8 @@ export default defineConfig({
     host: true,        // listen on 0.0.0.0 so localhost and 127.0.0.1 both work
     port: 5173,
     open: true,        // open browser automatically when you run npm run dev
+    proxy: {
+      "/api": { target: "http://localhost:3001", changeOrigin: true },
+    },
   },
 })
