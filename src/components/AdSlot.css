@@ -1,0 +1,42 @@
+/* Ad slots: minimal styling so layout is reserved and not distracting */
+
+.ad-slot {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.ad-slot--footer {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 1rem;
+  min-height: 50px;
+  border-radius: 8px;
+}
+
+@media (min-width: 768px) {
+  .ad-slot--footer {
+    min-height: 90px;
+  }
+}
+
+.ad-slot--sidebar {
+  width: 100%;
+  max-width: 300px;
+  min-height: 250px;
+  margin-top: auto;
+  border-radius: 8px;
+}
+
+.ad-slot-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: inherit;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.ad-slot-label {
+  opacity: 0.6;
+}

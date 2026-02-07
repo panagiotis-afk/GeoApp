@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ThemePicker from "./ThemePicker";
 import CountryInfo from "./CountryInfo";
+import AdSlot from "./AdSlot";
 import { useContinentFilter } from "../context/ContinentFilterContext";
 import { usePlayerName } from "../context/PlayerNameContext";
 import { useGameStats, GAME_STATS_LABELS, type GameStatsKey } from "../context/GameStatsContext";
@@ -418,6 +419,7 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
               </div>
             );
           })()}
+          <AdSlot id="ad-sidebar" placement="sidebar" />
         </aside>
         {bugFormOpen && (
           <div
@@ -623,6 +625,7 @@ export default function Home({ onPlayPin, onPlayTrail, onPlayFlag, onPlayNative,
         </main>
       )}
           <footer className="home-footer">
+            <AdSlot id="ad-footer" placement="footer" />
             <p>Inspired by GeoGuessr & Travle</p>
             <p className="home-shortcuts">Press <kbd>1</kbd>–<kbd>8</kbd> to start a game, <kbd>Esc</kbd> to go back.</p>
           </footer>

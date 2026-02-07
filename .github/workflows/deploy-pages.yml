@@ -40,6 +40,10 @@ jobs:
           # Supabase (leaderboard) — add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY as repo secrets
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          # AdSense (optional) — add VITE_ADSENSE_CLIENT, VITE_ADSENSE_SLOT_FOOTER, VITE_ADSENSE_SLOT_SIDEBAR as repo secrets
+          VITE_ADSENSE_CLIENT: ${{ secrets.VITE_ADSENSE_CLIENT }}
+          VITE_ADSENSE_SLOT_FOOTER: ${{ secrets.VITE_ADSENSE_SLOT_FOOTER }}
+          VITE_ADSENSE_SLOT_SIDEBAR: ${{ secrets.VITE_ADSENSE_SLOT_SIDEBAR }}
         run: npm run build
 
       # GitHub Pages serves 404.html for missing paths (e.g. /GeoApp/foo)
