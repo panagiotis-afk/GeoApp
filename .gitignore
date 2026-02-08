@@ -5,6 +5,7 @@ node_modules
 dist
 
 # Local env — do not commit (may contain secrets)
+.env
 .env.local
 .env.*.local
 
