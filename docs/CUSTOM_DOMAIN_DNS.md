@@ -172,9 +172,29 @@ If Squarespace doesn’t allow editing the “Squarespace Defaults” preset, us
 
 ---
 
-## If it still fails
+## If it still fails (DNS check unsuccessful)
 
-- **Double-check** the CNAME value: `panagiotis-afk.github.io` only (your GitHub username + `.github.io`).
-- **Wait** at least 1–2 hours and try again; some regions propagate slowly.
-- Use the registrar’s “DNS propagation” or “check DNS” tool to confirm the new records show globally.
+### 1. Confirm the domain uses Squarespace’s nameservers
+
+DNS records in Squarespace only apply if the domain is using **Squarespace’s nameservers**. If the domain uses another provider’s nameservers (e.g. Cloudflare, the registrar’s default), the world will see that provider’s DNS, not Squarespace’s.
+
+- In Squarespace: **Domains** → **geoquest.studio** → **Domain Nameservers** (left menu under DNS).
+- Ensure it’s set to **Squarespace nameservers** (or “Use Squarespace nameservers”), not “Custom” or another provider.
+- If you previously switched to Cloudflare or another DNS provider, either switch back to Squarespace nameservers so your Squarespace DNS is used, or add the GitHub A/CNAME records in that provider instead.
+
+### 2. Check propagation
+
+- Open **[whatsmydns.net](https://www.whatsmydns.net)** (or [dnschecker.org](https://dnschecker.org)).
+- For **geoquest.studio**, check **A** records. You should see the four GitHub IPs (`185.199.108.153`, etc.) in most locations.
+- For **www.geoquest.studio**, check **CNAME**. You should see `panagiotis-afk.github.io`.
+- If many locations still show old or no results, wait a few more hours (up to 24–48) and recheck.
+
+### 3. Re-trigger GitHub’s check
+
+- In GitHub: **Settings → Pages** → Custom domain. Click **Remove** on the domain, then type **geoquest.studio** again and click **Save** to run a fresh DNS check.
+
+### 4. Other checks
+
+- **CNAME:** Must be exactly `panagiotis-afk.github.io` (no `https://`, no trailing dot, no repo path).
+- **DNSSEC:** If **DNSSEC** is enabled for the domain (Squarespace or elsewhere), a bad or outdated DS record can cause “record could not be retrieved”. You can temporarily disable DNSSEC to test, or fix the DS record at the registrar.
 - See [GitHub’s troubleshooting](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/troubleshooting-custom-domains-and-github-pages).
